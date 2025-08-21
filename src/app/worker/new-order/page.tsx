@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ProductThumbnail } from '@/components/ui/ProductImage'
 import {
 	Select,
 	SelectContent,
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
 import { branchesApi, ordersApi, productsApi } from '@/lib/api'
+import { getPrimaryImage } from '@/lib/imageUtils'
 import { Product, ProductCategory } from '@/types'
 import {
 	AlertCircle,
@@ -218,6 +220,8 @@ const NewOrder: React.FC = () => {
 		const addedProductIds = orderItems.map(item => item.product._id)
 		return products.filter(product => !addedProductIds.includes(product._id))
 	}
+
+	// getPrimaryImage function is now imported from imageUtils
 
 	// Handle showing suggestions modal
 	const handleShowSuggestions = () => {
@@ -469,7 +473,14 @@ const NewOrder: React.FC = () => {
 													>
 														<div className='flex items-start justify-between mb-2'>
 															<div className='flex items-start flex-1 min-w-0'>
-																<Package className='h-4 w-4 text-gray-400 mr-2 flex-shrink-0 mt-0.5' />
+																<div className='w-10 h-10 flex-shrink-0 mr-3'>
+																	<ProductThumbnail
+																		src={getPrimaryImage(product)}
+																		alt={product.name}
+																		size='sm'
+																		priority={false}
+																	/>
+																</div>
 																<div className='min-w-0 flex-1'>
 																	<p className='font-medium text-sm text-gray-900 mb-1 line-clamp-2'>
 																		{product.name}
@@ -529,7 +540,14 @@ const NewOrder: React.FC = () => {
 															>
 																<td className='p-3'>
 																	<div className='flex items-start'>
-																		<Package className='h-4 w-4 text-gray-400 mr-3 flex-shrink-0 mt-0.5' />
+																		<div className='w-10 h-10 flex-shrink-0 mr-3'>
+																			<ProductThumbnail
+																				src={getPrimaryImage(product)}
+																				alt={product.name}
+																				size='sm'
+																				priority={false}
+																			/>
+																		</div>
 																		<div className='min-w-0 flex-1'>
 																			<p className='font-medium text-sm text-gray-900 mb-1 truncate'>
 																				{product.name}
@@ -927,7 +945,14 @@ const NewOrder: React.FC = () => {
 													{/* Mobile Layout */}
 													<div className='block sm:hidden'>
 														<div className='flex items-start mb-2'>
-															<Package className='h-4 w-4 text-gray-400 mr-2 flex-shrink-0 mt-0.5' />
+															<div className='w-10 h-10 flex-shrink-0 mr-3'>
+																<ProductThumbnail
+																	src={getPrimaryImage(product)}
+																	alt={product.name}
+																	size='sm'
+																	priority={false}
+																/>
+															</div>
 															<div className='flex-1 min-w-0'>
 																<p className='font-medium text-sm text-gray-900 mb-1 line-clamp-2'>
 																	{product.name}
@@ -965,7 +990,14 @@ const NewOrder: React.FC = () => {
 													{/* Desktop Layout */}
 													<div className='hidden sm:flex items-center justify-between'>
 														<div className='flex items-center flex-1 min-w-0 mr-3'>
-															<Package className='h-4 w-4 text-gray-400 mr-3 flex-shrink-0' />
+															<div className='w-10 h-10 flex-shrink-0 mr-3'>
+																<ProductThumbnail
+																	src={getPrimaryImage(product)}
+																	alt={product.name}
+																	size='sm'
+																	priority={false}
+																/>
+															</div>
 															<div className='min-w-0 flex-1'>
 																<p className='font-medium text-sm text-gray-900 truncate mb-1'>
 																	{product.name}

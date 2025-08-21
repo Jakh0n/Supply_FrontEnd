@@ -7,6 +7,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
+import { ProductThumbnail } from '@/components/ui/ProductImage'
+import { getPrimaryImage } from '@/lib/imageUtils'
 import { Order } from '@/types'
 import { Calendar, MapPin, Package, User, X } from 'lucide-react'
 import React from 'react'
@@ -48,6 +50,8 @@ const formatDate = (dateString: string): string => {
 const getTotalQuantity = (items: Array<{ quantity: number }>): number => {
 	return items.reduce((total, item) => total + item.quantity, 0)
 }
+
+// getPrimaryImage function is now imported from imageUtils
 
 const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 	order,
@@ -136,16 +140,26 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 									key={index}
 									className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'
 								>
-									<div className='flex-1'>
-										<div className='font-medium'>{item.product.name}</div>
-										<div className='text-sm text-gray-600'>
-											{item.product.category} • {item.product.unit}
+									<div className='flex items-center flex-1'>
+										<div className='w-10 h-10 flex-shrink-0 mr-3'>
+											<ProductThumbnail
+												src={getPrimaryImage(item.product)}
+												alt={item.product.name}
+												size='sm'
+												priority={false}
+											/>
 										</div>
-										{item.notes && (
-											<div className='text-sm text-gray-500 mt-1'>
-												Note: {item.notes}
+										<div className='flex-1'>
+											<div className='font-medium'>{item.product.name}</div>
+											<div className='text-sm text-gray-600'>
+												{item.product.category} • {item.product.unit}
 											</div>
-										)}
+											{item.notes && (
+												<div className='text-sm text-gray-500 mt-1'>
+													Note: {item.notes}
+												</div>
+											)}
+										</div>
 									</div>
 									<div className='text-right'>
 										<div className='font-medium'>x{item.quantity}</div>
