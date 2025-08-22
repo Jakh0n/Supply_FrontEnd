@@ -288,8 +288,8 @@ export default function EditorDashboard() {
 							</thead>
 							<tbody>
 															${order.items
-								.map(
-									item => `
+																.map(
+																	item => `
 								<tr>
 									<td>${item.product?.name || 'Product Deleted'}</td>
 									<td>${item.product?.category || '-'}</td>
@@ -298,8 +298,8 @@ export default function EditorDashboard() {
 									<td>${item.notes || '-'}</td>
 								</tr>
 							`
-								)
-								.join('')}
+																)
+																.join('')}
 							</tbody>
 						</table>
 					</div>
@@ -411,12 +411,14 @@ export default function EditorDashboard() {
 			order.worker.username,
 			order.branch,
 			formatDate(order.requestedDate),
-					order.status,
-		order.items.length,
-		order.items.map(item => item.product?.name || 'Product Deleted').join('; '),
-		order.items
-			.map(item => `${item.quantity} ${item.product?.unit || 'unit'}`)
-			.join('; '),
+			order.status,
+			order.items.length,
+			order.items
+				.map(item => item.product?.name || 'Product Deleted')
+				.join('; '),
+			order.items
+				.map(item => `${item.quantity} ${item.product?.unit || 'unit'}`)
+				.join('; '),
 			order.processedBy?.username || 'Not processed',
 			order.processedAt ? formatDate(order.processedAt) : 'Not processed',
 			order.notes || '',
@@ -454,6 +456,119 @@ export default function EditorDashboard() {
 		}
 	}
 
+	// Helper functions for PDF summary
+	const getCategoryDisplayName = (category: string): string => {
+		const categoryMap: Record<string, string> = {
+			// New categories
+			'frozen-products': 'Frozen Products',
+			'main-products': 'Main Products',
+			'desserts-drinks': 'Desserts and Drinks',
+			'packaging-materials': 'Packaging Materials',
+			'cleaning-materials': 'Cleaning Materials',
+
+			// Legacy categories mapping to new ones
+			food: 'Main Products',
+			beverages: 'Desserts and Drinks',
+			cleaning: 'Cleaning Materials',
+			equipment: 'Packaging Materials',
+			packaging: 'Packaging Materials',
+			other: 'Main Products',
+		}
+		return categoryMap[category] || 'Main Products'
+	}
+
+	const formatKRW = (amount: number): string => {
+		return new Intl.NumberFormat('ko-KR', {
+			style: 'currency',
+			currency: 'KRW',
+			minimumFractionDigits: 0,
+		}).format(amount)
+	}
+
+	const calculateProductsSummary = (orders: Order[]) => {
+		const productMap = new Map<
+			string,
+			{
+				name: string
+				unit: string
+				category: string
+				totalQuantity: number
+				totalValue: number
+			}
+		>()
+
+		const categoryMap = new Map<
+			string,
+			{
+				quantity: number
+				value: number
+			}
+		>()
+
+		let totalQuantity = 0
+		let totalValue = 0
+
+		// Process all orders and their items
+		orders.forEach(order => {
+			order.items.forEach(item => {
+				const productId = item.product._id
+				const quantity = item.quantity
+				const value = quantity * item.product.price
+				const categoryDisplayName = getCategoryDisplayName(
+					item.product.category
+				)
+
+				totalQuantity += quantity
+				totalValue += value
+
+				// Update product summary
+				if (productMap.has(productId)) {
+					const existing = productMap.get(productId)!
+					existing.totalQuantity += quantity
+					existing.totalValue += value
+				} else {
+					productMap.set(productId, {
+						name: item.product.name,
+						unit: item.product.unit,
+						category: categoryDisplayName,
+						totalQuantity: quantity,
+						totalValue: value,
+					})
+				}
+
+				// Update category summary
+				if (categoryMap.has(categoryDisplayName)) {
+					const existing = categoryMap.get(categoryDisplayName)!
+					existing.quantity += quantity
+					existing.value += value
+				} else {
+					categoryMap.set(categoryDisplayName, {
+						quantity: quantity,
+						value: value,
+					})
+				}
+			})
+		})
+
+		// Convert maps to arrays and sort
+		const topProducts = Array.from(productMap.values()).sort(
+			(a, b) => b.totalQuantity - a.totalQuantity
+		)
+
+		const byCategory = Object.fromEntries(categoryMap)
+
+		// Calculate average order value
+		const averageOrderValue = orders.length > 0 ? totalValue / orders.length : 0
+
+		return {
+			totalQuantity,
+			totalValue,
+			averageOrderValue,
+			byCategory,
+			topProducts,
+		}
+	}
+
 	const generatePDFReport = (orders: Order[]) => {
 		const ordersByBranch = orders.reduce((acc, order) => {
 			if (!acc[order.branch]) {
@@ -462,6 +577,9 @@ export default function EditorDashboard() {
 			acc[order.branch].push(order)
 			return acc
 		}, {} as Record<string, Order[]>)
+
+		// Calculate products summary
+		const productsSummary = calculateProductsSummary(orders)
 
 		const pdfContent = `
 			<!DOCTYPE html>
@@ -552,6 +670,74 @@ export default function EditorDashboard() {
 					.download-btn:hover {
 						background-color: #0056b3;
 					}
+					.summary-section {
+						background-color: #f8f9fa;
+						border: 1px solid #dee2e6;
+						border-radius: 6px;
+						padding: 20px;
+						margin-bottom: 30px;
+						page-break-inside: avoid;
+					}
+					.summary-header {
+						font-size: 18px;
+						font-weight: bold;
+						color: #333;
+						margin-bottom: 15px;
+						text-align: center;
+						border-bottom: 2px solid #007bff;
+						padding-bottom: 8px;
+					}
+					.summary-stats {
+						display: flex;
+						justify-content: space-around;
+						margin-bottom: 20px;
+						flex-wrap: wrap;
+					}
+					.stat-item {
+						text-align: center;
+						margin-bottom: 10px;
+					}
+					.stat-label {
+						display: block;
+						font-size: 12px;
+						color: #666;
+						margin-bottom: 4px;
+					}
+					.stat-value {
+						display: block;
+						font-size: 16px;
+						font-weight: bold;
+						color: #333;
+					}
+					.category-breakdown, .top-products {
+						margin-bottom: 20px;
+					}
+					.category-breakdown h4, .top-products h4 {
+						font-size: 14px;
+						font-weight: bold;
+						color: #333;
+						margin-bottom: 8px;
+						border-left: 3px solid #007bff;
+						padding-left: 8px;
+					}
+					.category-item, .ranking-item {
+						font-size: 12px;
+						padding: 4px 0;
+						color: #555;
+						border-bottom: 1px solid #eee;
+					}
+					.category-list, .products-ranking {
+						margin-left: 10px;
+					}
+					@media print {
+						.summary-section {
+							background-color: #f8f9fa !important;
+							-webkit-print-color-adjust: exact;
+						}
+						.stat-item {
+							break-inside: avoid;
+						}
+					}
 				</style>
 			</head>
 			<body>
@@ -565,6 +751,66 @@ export default function EditorDashboard() {
 					<h3>${new Date().toLocaleDateString()}</h3>
 				</div>
 
+				<div class="summary-section">
+					<div class="summary-header">
+						📊 Products Summary
+					</div>
+					
+					<div class="summary-stats">
+						<div class="stat-item">
+							<span class="stat-label">Total Products Ordered:</span>
+							<span class="stat-value">${productsSummary.totalQuantity} items</span>
+						</div>
+						<div class="stat-item">
+							<span class="stat-label">Total Order Value:</span>
+							<span class="stat-value">${formatKRW(productsSummary.totalValue)}</span>
+						</div>
+						<div class="stat-item">
+							<span class="stat-label">Average Order Value:</span>
+							<span class="stat-value">${formatKRW(productsSummary.averageOrderValue)}</span>
+						</div>
+					</div>
+
+					<div class="category-breakdown">
+						<h4>By Category:</h4>
+						<div class="category-list">
+							${Object.entries(productsSummary.byCategory)
+								.map(
+									([category, summary]) => `
+								<div class="category-item">
+									• ${category}: ${summary.quantity} items (${formatKRW(summary.value)})
+								</div>
+							`
+								)
+								.join('')}
+						</div>
+					</div>
+
+					${
+						productsSummary.topProducts.length > 0
+							? `
+					<div class="top-products">
+						<h4>Top Products (Most Ordered):</h4>
+						<div class="products-ranking">
+							${productsSummary.topProducts
+								.slice(0, 10)
+								.map(
+									(product, index) => `
+								<div class="ranking-item">
+									${index + 1}. ${product.name}: ${product.totalQuantity} ${
+										product.unit
+									} (${formatKRW(product.totalValue)})
+								</div>
+							`
+								)
+								.join('')}
+						</div>
+					</div>
+					`
+							: ''
+					}
+				</div>
+
 				${Object.entries(ordersByBranch)
 					.map(
 						([branch, branchOrders]) => `
@@ -576,10 +822,12 @@ export default function EditorDashboard() {
 							${branchOrders
 								.flatMap(order =>
 									order.items.map(
-																			item => `
+										item => `
 								<div class="product-item">
 									<span class="product-name">${item.product?.name || 'Product Deleted'}</span>
-									<span class="product-quantity">- ${item.quantity} ${item.product?.unit || 'unit'}</span>
+									<span class="product-quantity">- ${item.quantity} ${
+											item.product?.unit || 'unit'
+										}</span>
 								</div>
 							`
 									)
@@ -726,21 +974,21 @@ export default function EditorDashboard() {
 												<TableHead className='text-xs'>Notes</TableHead>
 											</TableRow>
 										</TableHeader>
-																			<TableBody>
-										{selectedOrder.items.map((item, index) => (
-											<TableRow key={item.product?._id || `deleted-${index}`}>
-												<TableCell className='text-sm'>
-													{item.product?.name || 'Product Deleted'}
-												</TableCell>
-												<TableCell className='text-sm'>
-													{item.product?.category || '-'}
-												</TableCell>
-												<TableCell className='text-sm'>
-													{item.quantity}
-												</TableCell>
-												<TableCell className='text-sm'>
-													{item.product?.unit || 'unit'}
-												</TableCell>
+										<TableBody>
+											{selectedOrder.items.map((item, index) => (
+												<TableRow key={item.product?._id || `deleted-${index}`}>
+													<TableCell className='text-sm'>
+														{item.product?.name || 'Product Deleted'}
+													</TableCell>
+													<TableCell className='text-sm'>
+														{item.product?.category || '-'}
+													</TableCell>
+													<TableCell className='text-sm'>
+														{item.quantity}
+													</TableCell>
+													<TableCell className='text-sm'>
+														{item.product?.unit || 'unit'}
+													</TableCell>
 													<TableCell className='text-sm'>
 														{item.notes || '-'}
 													</TableCell>
