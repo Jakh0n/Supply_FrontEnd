@@ -408,7 +408,9 @@ const AdminDashboard: React.FC = () => {
 
 					// Calculate order value
 					const orderValue = order.items.reduce(
-						(sum, item) => sum + item.quantity * item.product.price,
+						(sum, item) =>
+							sum +
+							(item.product?.price ? item.quantity * item.product.price : 0),
 						0
 					)
 					acc[branch].totalValue += orderValue
