@@ -96,7 +96,7 @@ export interface Order {
 	branch: string
 	requestedDate: string
 	items: Array<{
-		product: Product | null
+		product: Product
 		quantity: number
 		notes?: string
 	}>

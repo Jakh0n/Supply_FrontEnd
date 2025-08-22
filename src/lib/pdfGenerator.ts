@@ -20,6 +20,18 @@ export interface BranchReportData {
 	weeklyTrend: number
 }
 
+type OrderItem = {
+	product: {
+		_id: string
+		name: string
+		category: ProductCategory
+		unit: string
+		price: number
+	}
+	quantity: number
+	notes?: string
+}
+
 export class PDFGenerator {
 	private static formatDate(dateString: string): string {
 		return new Date(dateString).toLocaleDateString('en-US', {
@@ -59,9 +71,10 @@ export class PDFGenerator {
 		return categoryOrder[category] || 999
 	}
 
-	private static groupItemsByCategory(items: any[]): Record<string, any[]> {
+	private static groupItemsByCategory(
+		items: OrderItem[]
+	): Record<string, OrderItem[]> {
 		const grouped = items.reduce((acc, item) => {
-			if (!item.product) return acc // Skip null products
 			const category = item.product.category
 			const categoryName = this.getCategoryDisplayName(category)
 			if (!acc[categoryName]) {
@@ -69,10 +82,10 @@ export class PDFGenerator {
 			}
 			acc[categoryName].push(item)
 			return acc
-		}, {} as Record<string, any[]>)
+		}, {} as Record<string, OrderItem[]>)
 
 		// Sort categories by predefined order
-		const sortedGroups: Record<string, any[]> = {}
+		const sortedGroups: Record<string, OrderItem[]> = {}
 
 		// Find the original category key for each display name and sort by order
 		const categoryEntries = Object.entries(grouped)
@@ -675,9 +688,7 @@ export class PDFGenerator {
 			(sum, order) =>
 				sum +
 				order.items.reduce(
-					(itemSum, item) =>
-						itemSum +
-						(item.product?.price ? item.quantity * item.product.price : 0),
+					(itemSum, item) => itemSum + item.quantity * item.product.price,
 					0
 				),
 			0
@@ -825,9 +836,7 @@ export class PDFGenerator {
 			(sum, order) =>
 				sum +
 				order.items.reduce(
-					(itemSum, item) =>
-						itemSum +
-						(item.product?.price ? item.quantity * item.product.price : 0),
+					(itemSum, item) => itemSum + item.quantity * item.product.price,
 					0
 				),
 			0
