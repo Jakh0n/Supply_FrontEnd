@@ -29,8 +29,9 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
-import { branchesApi, ordersApi, productsApi } from '@/lib/api'
+import { ordersApi, productsApi } from '@/lib/api'
 import { getPrimaryImage } from '@/lib/imageUtils'
+import * as settingsApi from '@/lib/settingsApi'
 import { Product, ProductCategory } from '@/types'
 import {
 	AlertCircle,
@@ -105,8 +106,15 @@ const NewOrder: React.FC = () => {
 	const fetchBranches = useCallback(async () => {
 		try {
 			setBranchesLoading(true)
-			const response = await branchesApi.getBranchNames()
-			setBranches(response.branches || [])
+			const response = await settingsApi.getBranches()
+			// Transform settings branches to match the expected format
+			const transformedBranches = response.branches.map(branch => ({
+				name: branch.name,
+				activeWorkers: 0, // We'll need to implement this later
+				totalOrders: 0, // We'll need to implement this later
+				pendingOrders: 0, // We'll need to implement this later
+			}))
+			setBranches(transformedBranches)
 
 			// Set default branch to user's assigned branch if they have one
 			if (user?.branch) {

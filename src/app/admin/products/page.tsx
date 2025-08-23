@@ -24,6 +24,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { productsApi } from '@/lib/api'
+import * as settingsApi from '@/lib/settingsApi'
 import { Product, ProductCategory, ProductFormData, ProductUnit } from '@/types'
 import { AlertCircle } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -45,19 +46,8 @@ const parseKRWInput = (value: string): number => {
 	return parseInt(numericValue) || 0
 }
 
-const CATEGORIES = [
-	{ value: 'frozen-products' as ProductCategory, label: 'Frozen Products' },
-	{ value: 'main-products' as ProductCategory, label: 'Main Products' },
-	{ value: 'desserts-drinks' as ProductCategory, label: 'Desserts and Drinks' },
-	{
-		value: 'packaging-materials' as ProductCategory,
-		label: 'Packaging Materials',
-	},
-	{
-		value: 'cleaning-materials' as ProductCategory,
-		label: 'Cleaning Materials',
-	},
-]
+// Categories will be fetched from settings API
+const CATEGORIES: { value: ProductCategory; label: string }[] = []
 
 const UNITS = [
 	{ value: 'kg' as ProductUnit, label: 'Kilogram (kg)' },
@@ -73,6 +63,9 @@ const UNITS = [
 
 const ProductsManagement: React.FC = () => {
 	const [products, setProducts] = useState<Product[]>([])
+	const [categories, setCategories] = useState<
+		{ value: ProductCategory; label: string }[]
+	>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState('')
 	const [searchTerm, setSearchTerm] = useState('')
@@ -96,6 +89,28 @@ const ProductsManagement: React.FC = () => {
 	})
 	const [formLoading, setFormLoading] = useState(false)
 
+	const fetchCategories = useCallback(async () => {
+		try {
+			const response = await settingsApi.getCategories()
+			const transformedCategories = response.categories.map(category => ({
+				value: category.value as ProductCategory,
+				label: category.name,
+			}))
+			setCategories(transformedCategories)
+
+			// Set default category if available
+			if (transformedCategories.length > 0) {
+				setFormData(prev => ({
+					...prev,
+					category: transformedCategories[0].value,
+				}))
+			}
+		} catch (err) {
+			console.error('Failed to fetch categories:', err)
+			toast.error('Failed to load categories')
+		}
+	}, [])
+
 	const fetchProducts = useCallback(async () => {
 		try {
 			setLoading(true)
@@ -114,8 +129,9 @@ const ProductsManagement: React.FC = () => {
 	}, [searchTerm, categoryFilter, statusFilter])
 
 	useEffect(() => {
+		fetchCategories()
 		fetchProducts()
-	}, [fetchProducts])
+	}, [fetchCategories, fetchProducts])
 
 	const handleCreateProduct = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -288,6 +304,7 @@ const ProductsManagement: React.FC = () => {
 						onCreateProduct={handleCreateProduct}
 						formLoading={formLoading}
 						resetForm={resetForm}
+						categories={categories}
 					/>
 
 					{/* Error message */}
@@ -310,6 +327,7 @@ const ProductsManagement: React.FC = () => {
 						onSearchChange={setSearchTerm}
 						onCategoryChange={setCategoryFilter}
 						onStatusChange={setStatusFilter}
+						categories={categories}
 					/>
 
 					{/* Products Table */}

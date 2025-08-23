@@ -21,8 +21,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { ordersApi, usersApi } from '@/lib/api'
+import { ordersApi } from '@/lib/api'
 import { PDFGenerator } from '@/lib/pdfGenerator'
+import * as settingsApi from '@/lib/settingsApi'
 import { Order, OrderStatus } from '@/types'
 import {
 	AlertCircle,
@@ -111,8 +112,8 @@ const OrdersManagement: React.FC = () => {
 	// Fetch branches
 	const fetchBranches = useCallback(async () => {
 		try {
-			const response = await usersApi.getBranches()
-			setBranches(response.branches)
+			const response = await settingsApi.getBranches()
+			setBranches(response.branches.map(branch => branch.name))
 		} catch (err) {
 			console.error('Failed to fetch branches:', err)
 		}

@@ -77,6 +77,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 			href: '/admin/users',
 			icon: Users,
 		},
+		{
+			title: 'Settings',
+			href: '/admin/settings',
+			icon: Settings,
+		},
 	]
 
 	const SidebarContent = ({ collapsed = false }: { collapsed?: boolean }) => (

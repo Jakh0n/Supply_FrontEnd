@@ -11,19 +11,7 @@ import {
 import { ProductCategory } from '@/types'
 import { Search } from 'lucide-react'
 
-const CATEGORIES = [
-	{ value: 'frozen-products' as ProductCategory, label: 'Frozen Products' },
-	{ value: 'main-products' as ProductCategory, label: 'Main Products' },
-	{ value: 'desserts-drinks' as ProductCategory, label: 'Desserts and Drinks' },
-	{
-		value: 'packaging-materials' as ProductCategory,
-		label: 'Packaging Materials',
-	},
-	{
-		value: 'cleaning-materials' as ProductCategory,
-		label: 'Cleaning Materials',
-	},
-]
+// Categories will be passed as props from parent component
 
 interface ProductsFiltersProps {
 	searchTerm: string
@@ -32,6 +20,7 @@ interface ProductsFiltersProps {
 	onSearchChange: (search: string) => void
 	onCategoryChange: (category: ProductCategory | 'all') => void
 	onStatusChange: (status: 'true' | 'false' | 'all') => void
+	categories: { value: ProductCategory; label: string }[]
 }
 
 const ProductsFilters: React.FC<ProductsFiltersProps> = ({
@@ -41,6 +30,7 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
 	onSearchChange,
 	onCategoryChange,
 	onStatusChange,
+	categories,
 }) => {
 	return (
 		<Card>
@@ -81,7 +71,7 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value='all'>All Categories</SelectItem>
-								{CATEGORIES.map(category => (
+								{categories.map(category => (
 									<SelectItem key={category.value} value={category.value}>
 										{category.label}
 									</SelectItem>
