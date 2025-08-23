@@ -37,7 +37,7 @@ import { toast } from 'sonner'
 
 interface DashboardStats {
 	todayOrders: number
-	totalOrders: number
+	todayCompletedOrders: number
 	pendingOrders: number
 	completedOrders?: number
 	branchStats: Array<{
