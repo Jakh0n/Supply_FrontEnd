@@ -295,7 +295,7 @@ export default function EditorDashboard() {
 									<td>${item.product?.category || '-'}</td>
 									<td>${item.quantity}</td>
 									<td>${item.product?.unit || 'unit'}</td>
-									<td>${item.notes || '-'}</td>
+									<td>-</td>
 								</tr>
 							`
 																)
@@ -1098,9 +1098,7 @@ export default function EditorDashboard() {
 													<TableCell className='text-sm'>
 														{item.product?.unit || 'unit'}
 													</TableCell>
-													<TableCell className='text-sm'>
-														{item.notes || '-'}
-													</TableCell>
+													<TableCell className='text-sm'>-</TableCell>
 												</TableRow>
 											))}
 										</TableBody>
