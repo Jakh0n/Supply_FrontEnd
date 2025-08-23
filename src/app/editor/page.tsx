@@ -435,18 +435,32 @@ export default function EditorDashboard() {
 	}
 
 	const handleDownloadPDF = async () => {
+		// Only allow PDF download if a date is selected
+		if (!filters.date || filters.date.trim() === '') {
+			toast.error('Please select a date to download PDF report')
+			return
+		}
+
 		try {
 			setLoading(true)
-			const response = await ordersApi.getOrders({ ...filters, limit: 1000 })
+			// Fetch orders from all branches for the selected date
+			const dateFilters = {
+				date: filters.date,
+				branch: '', // Clear branch filter to get all branches
+				status: 'all' as OrderStatus | 'all', // Get all statuses
+				page: 1,
+				limit: 1000,
+			}
+			const response = await ordersApi.getOrders(dateFilters)
 
 			if (response.orders.length === 0) {
-				toast.error('No orders found to download')
+				toast.error(`No orders found for ${filters.date}`)
 				return
 			}
 
 			generatePDFReport(response.orders)
 			toast.success(
-				`PDF report generated with ${response.orders.length} orders`
+				`PDF report generated with ${response.orders.length} orders from all branches for ${filters.date}`
 			)
 		} catch (error) {
 			console.error('Error generating PDF:', error)
@@ -570,6 +584,7 @@ export default function EditorDashboard() {
 	}
 
 	const generatePDFReport = (orders: Order[]) => {
+		// Group orders by branch
 		const ordersByBranch = orders.reduce((acc, order) => {
 			if (!acc[order.branch]) {
 				acc[order.branch] = []
@@ -578,6 +593,69 @@ export default function EditorDashboard() {
 			return acc
 		}, {} as Record<string, Order[]>)
 
+		// Helper function to get category display name and sort order
+		const getCategoryDisplayName = (category: string): string => {
+			const categoryMap: Record<string, string> = {
+				// New categories
+				'frozen-products': 'Frozen Products',
+				'main-products': 'Main Products',
+				'desserts-drinks': 'Desserts and Drinks',
+				'packaging-materials': 'Packaging Materials',
+				'cleaning-materials': 'Cleaning Materials',
+				// Legacy categories mapping
+				food: 'Main Products',
+				beverages: 'Desserts and Drinks',
+				cleaning: 'Cleaning Materials',
+				equipment: 'Packaging Materials',
+				packaging: 'Packaging Materials',
+				other: 'Main Products',
+			}
+			return categoryMap[category] || 'Main Products'
+		}
+
+		const getCategorySortOrder = (category: string): number => {
+			const displayName = getCategoryDisplayName(category)
+			const sortOrder: Record<string, number> = {
+				'Frozen Products': 1,
+				'Main Products': 2,
+				'Desserts and Drinks': 3,
+				'Packaging Materials': 4,
+				'Cleaning Materials': 5,
+			}
+			return sortOrder[displayName] || 6
+		}
+
+		// Function to group and sort items by category
+		type OrderItemType = Order['items'][0]
+		const groupItemsByCategory = (items: OrderItemType[]) => {
+			const grouped = items.reduce((acc, item) => {
+				const categoryName = getCategoryDisplayName(item.product.category)
+				if (!acc[categoryName]) {
+					acc[categoryName] = []
+				}
+				acc[categoryName].push(item)
+				return acc
+			}, {} as Record<string, OrderItemType[]>)
+
+			// Sort categories by predefined order
+			const sortedGroups: Record<string, OrderItemType[]> = {}
+			const categoryEntries = Object.entries(grouped)
+				.map(([categoryName, items]) => ({
+					categoryName,
+					items: items.sort((a, b) =>
+						a.product.name.localeCompare(b.product.name)
+					),
+					sortOrder: getCategorySortOrder(categoryName),
+				}))
+				.sort((a, b) => a.sortOrder - b.sortOrder)
+
+			categoryEntries.forEach(({ categoryName, items }) => {
+				sortedGroups[categoryName] = items
+			})
+
+			return sortedGroups
+		}
+
 		// Calculate products summary
 		const productsSummary = calculateProductsSummary(orders)
 
@@ -585,7 +663,7 @@ export default function EditorDashboard() {
 			<!DOCTYPE html>
 			<html>
 			<head>
-				<title>Orders Checklist - ${new Date().toLocaleDateString()}</title>
+				<title>Orders Checklist - ${filters.date}</title>
 				<style>
 					body { 
 						font-family: Arial, sans-serif; 
@@ -623,11 +701,25 @@ export default function EditorDashboard() {
 						font-size: 16px;
 						color: #333;
 					}
+					.category-section {
+						margin-bottom: 20px;
+					}
+					.category-header {
+						font-weight: bold;
+						font-size: 14px;
+						color: #444;
+						margin-bottom: 8px;
+						padding-left: 10px;
+						border-left: 3px solid #007bff;
+						background-color: #f8f9fa;
+						padding: 8px 10px;
+					}
 					.products-list { 
 						margin-top: 10px;
+						margin-left: 15px;
 					}
 					.product-item { 
-						padding: 8px 0;
+						padding: 6px 0;
 						border-bottom: 1px solid #eee;
 						font-size: 12px;
 						line-height: 1.3;
@@ -653,7 +745,7 @@ export default function EditorDashboard() {
 					@media print { 
 						body { margin: 15px; }
 						.no-print { display: none; }
-						.branch-section { 
+						.branch-section, .category-section { 
 							page-break-inside: avoid;
 						}
 					}
@@ -747,13 +839,13 @@ export default function EditorDashboard() {
 				</div>
 
 				<div class="header">
-					<h1>Orders Checklist</h1>
-					<h3>${new Date().toLocaleDateString()}</h3>
+					<h1>Orders Checklist - ${filters.date}</h1>
+					<h3>All Branches Report</h3>
 				</div>
 
 				<div class="summary-section">
 					<div class="summary-header">
-						📊 Products Summary
+						📊 Products Summary for ${filters.date}
 					</div>
 					
 					<div class="summary-stats">
@@ -812,16 +904,27 @@ export default function EditorDashboard() {
 				</div>
 
 				${Object.entries(ordersByBranch)
-					.map(
-						([branch, branchOrders]) => `
+					.map(([branch, branchOrders]) => {
+						// Collect all items from all orders in this branch
+						const allBranchItems = branchOrders.flatMap(order => order.items)
+						// Group items by category and sort
+						const groupedItems = groupItemsByCategory(allBranchItems)
+
+						return `
 					<div class="branch-section">
 						<div class="branch-header">
-							📍 ${branch} Branch
+							📍 ${branch} Branch (${branchOrders.length} orders)
 						</div>
-						<div class="products-list">
-							${branchOrders
-								.flatMap(order =>
-									order.items.map(
+						${Object.entries(groupedItems)
+							.map(
+								([categoryName, items]) => `
+						<div class="category-section">
+							<div class="category-header">
+								${categoryName}
+							</div>
+							<div class="products-list">
+								${items
+									.map(
 										item => `
 								<div class="product-item">
 									<span class="product-name">${item.product?.name || 'Product Deleted'}</span>
@@ -831,16 +934,22 @@ export default function EditorDashboard() {
 								</div>
 							`
 									)
-								)
-								.join('')}
+									.join('')}
+							</div>
 						</div>
+					`
+							)
+							.join('')}
 					</div>
 				`
-					)
+					})
 					.join('')}
 
 				<div class="footer">
 					<p>Generated on ${new Date().toLocaleString()}</p>
+					<p>Report for date: ${filters.date} | Total orders: ${
+			orders.length
+		} | Total branches: ${Object.keys(ordersByBranch).length}</p>
 				</div>
 
 				<script>
