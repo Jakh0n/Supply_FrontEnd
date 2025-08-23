@@ -31,7 +31,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { ordersApi, productsApi } from '@/lib/api'
 import { getPrimaryImage } from '@/lib/imageUtils'
-import * as settingsApi from '@/lib/settingsApi'
 import { Product, ProductCategory } from '@/types'
 import {
 	AlertCircle,
@@ -69,20 +68,25 @@ interface OrderItem {
 	quantity: number
 }
 
-// Branch interface
-interface Branch {
-	name: string
-	activeWorkers: number
-	totalOrders: number
-	pendingOrders: number
-}
+// Hardcoded branches for delivery
+const DELIVERY_BRANCHES = [
+	'Kondae New',
+	'Hongdae',
+	'Seulde',
+	'Seulde Tantuni',
+	'Gangnam',
+	'Kondae',
+	'Itewon',
+	'Paket',
+	'Posco',
+]
 
 const NewOrder: React.FC = () => {
 	const { user } = useAuth()
 	const router = useRouter()
 	const [products, setProducts] = useState<Product[]>([])
 	const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-	const [branches, setBranches] = useState<Branch[]>([])
+	const [branches, setBranches] = useState<string[]>([])
 	const [selectedBranch, setSelectedBranch] = useState<string>('')
 	const [loading, setLoading] = useState(true)
 	const [branchesLoading, setBranchesLoading] = useState(true)
@@ -106,15 +110,8 @@ const NewOrder: React.FC = () => {
 	const fetchBranches = useCallback(async () => {
 		try {
 			setBranchesLoading(true)
-			const response = await settingsApi.getBranches()
-			// Transform settings branches to match the expected format
-			const transformedBranches = response.branches.map(branch => ({
-				name: branch.name,
-				activeWorkers: 0, // We'll need to implement this later
-				totalOrders: 0, // We'll need to implement this later
-				pendingOrders: 0, // We'll need to implement this later
-			}))
-			setBranches(transformedBranches)
+			// Use hardcoded branches instead of API call
+			setBranches(DELIVERY_BRANCHES)
 
 			// Set default branch to user's assigned branch if they have one
 			if (user?.branch) {
@@ -784,10 +781,10 @@ const NewOrder: React.FC = () => {
 											</SelectTrigger>
 											<SelectContent>
 												{branches.map(branch => (
-													<SelectItem key={branch.name} value={branch.name}>
+													<SelectItem key={branch} value={branch}>
 														<div className='flex items-center'>
 															<div className='w-2 h-2 bg-green-500 rounded-full mr-2'></div>
-															<span className='text-sm'>{branch.name}</span>
+															<span className='text-sm'>{branch}</span>
 														</div>
 													</SelectItem>
 												))}

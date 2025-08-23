@@ -21,7 +21,19 @@ import { ProductCategory, ProductFormData, ProductUnit } from '@/types'
 import { Plus } from 'lucide-react'
 import React from 'react'
 
-// Categories will be passed as props from parent component
+const CATEGORIES = [
+	{ value: 'frozen-products' as ProductCategory, label: 'Frozen Products' },
+	{ value: 'main-products' as ProductCategory, label: 'Main Products' },
+	{ value: 'desserts-drinks' as ProductCategory, label: 'Desserts and Drinks' },
+	{
+		value: 'packaging-materials' as ProductCategory,
+		label: 'Packaging Materials',
+	},
+	{
+		value: 'cleaning-materials' as ProductCategory,
+		label: 'Cleaning Materials',
+	},
+]
 
 const UNITS = [
 	{ value: 'kg' as ProductUnit, label: 'Kilogram (kg)' },
@@ -59,7 +71,6 @@ interface ProductsHeaderProps {
 	onCreateProduct: (e: React.FormEvent) => void
 	formLoading: boolean
 	resetForm: () => void
-	categories: { value: ProductCategory; label: string }[]
 }
 
 const ProductsHeader: React.FC<ProductsHeaderProps> = ({
@@ -70,7 +81,6 @@ const ProductsHeader: React.FC<ProductsHeaderProps> = ({
 	onCreateProduct,
 	formLoading,
 	resetForm,
-	categories,
 }) => {
 	return (
 		<div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
@@ -129,7 +139,7 @@ const ProductsHeader: React.FC<ProductsHeaderProps> = ({
 										<SelectValue placeholder='Select category' />
 									</SelectTrigger>
 									<SelectContent>
-										{categories.map(category => (
+										{CATEGORIES.map(category => (
 											<SelectItem key={category.value} value={category.value}>
 												{category.label}
 											</SelectItem>
