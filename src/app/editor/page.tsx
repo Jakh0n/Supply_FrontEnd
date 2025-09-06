@@ -735,15 +735,23 @@ export default function EditorDashboard() {
 				branchEntries.forEach(([branch, branchOrders], branchIndex) => {
 					checkNewPage(20)
 
-					// Branch header
+					// Branch header with box
 					pdf.setFontSize(10)
 					pdf.setFont('times', 'bold')
-					pdf.text(
-						`${branch} Branch (${branchOrders.length} orders)`,
-						margin,
-						yPosition
+					const branchText = `${branch} Branch`
+					const textWidth = pdf.getTextWidth(branchText)
+					const boxPadding = 2
+					const boxHeight = 8
+
+					// Draw box around branch name
+					pdf.rect(
+						margin - boxPadding,
+						yPosition - boxHeight + 2,
+						textWidth + boxPadding * 2,
+						boxHeight
 					)
-					yPosition += 8
+					pdf.text(branchText, margin, yPosition)
+					yPosition += 10
 
 					// Collect all items from all orders in this branch
 					const allBranchItems = branchOrders.flatMap(order => order.items)
