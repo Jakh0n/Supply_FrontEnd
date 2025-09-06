@@ -604,9 +604,13 @@ export default function EditorDashboard() {
 						// Current categories
 						'frozen-products': 'Frozen Products',
 						'main-products': 'Main Products',
-						'desserts-drinks': 'Desserts and Drinks',
+						desserts: 'Desserts',
+						drinks: 'Drinks',
 						'packaging-materials': 'Packaging Materials',
 						'cleaning-materials': 'Cleaning Materials',
+
+						// Legacy mapping for existing data
+						'desserts-drinks': 'Desserts and Drinks',
 
 						// Legacy categories mapping (if any old data exists)
 						food: 'Food',
@@ -624,9 +628,13 @@ export default function EditorDashboard() {
 					const sortOrder: Record<string, number> = {
 						'Frozen Products': 1,
 						'Main Products': 2,
+						Desserts: 3,
+						Drinks: 4,
+						'Packaging Materials': 5,
+						'Cleaning Materials': 6,
+
+						// Legacy sorting for existing data
 						'Desserts and Drinks': 3,
-						'Packaging Materials': 4,
-						'Cleaning Materials': 5,
 					}
 					return sortOrder[displayName] || 6
 				}
@@ -723,7 +731,8 @@ export default function EditorDashboard() {
 				addPageNumber()
 
 				// Process each branch
-				Object.entries(ordersByBranch).forEach(([branch, branchOrders]) => {
+				const branchEntries = Object.entries(ordersByBranch)
+				branchEntries.forEach(([branch, branchOrders], branchIndex) => {
 					checkNewPage(20)
 
 					// Branch header
@@ -812,8 +821,161 @@ export default function EditorDashboard() {
 						yPosition = Math.max(leftColumnY, middleColumnY, rightColumnY) + 3
 					})
 
-					yPosition += 5
+					// Add thin line separator between branches (but not after the last branch)
+					if (branchIndex < branchEntries.length - 1) {
+						yPosition += 3
+						checkNewPage(5)
+
+						// Draw thin separator line
+						pdf.setLineWidth(0.2)
+						pdf.setDrawColor(0, 0, 0) // Black line
+						pdf.line(margin, yPosition, pageWidth - margin, yPosition)
+						yPosition += 3
+					} else {
+						yPosition += 3
+					}
 				})
+
+				// Total Summary Section
+				yPosition += 10
+				checkNewPage(30)
+
+				// Collect all items from all branches to create total summary
+				const allItems = orders.flatMap(order => order.items)
+				const productTotals = new Map<
+					string,
+					{
+						name: string
+						unit: string
+						totalQuantity: number
+						category: string
+					}
+				>()
+
+				// Group and sum quantities by product
+				allItems.forEach(item => {
+					const productKey =
+						item.product?._id || item.product?.name || 'Unknown'
+					const productName = item.product?.name || 'Product Deleted'
+					const productUnit = item.product?.unit || 'units'
+					const productCategory = item.product?.category || 'other'
+
+					if (productTotals.has(productKey)) {
+						productTotals.get(productKey)!.totalQuantity += item.quantity
+					} else {
+						productTotals.set(productKey, {
+							name: productName,
+							unit: productUnit,
+							totalQuantity: item.quantity,
+							category: productCategory,
+						})
+					}
+				})
+
+				// Sort products by category, then by name
+				const sortedProducts = Array.from(productTotals.values()).sort(
+					(a, b) => {
+						const aCategoryOrder = getCategorySortOrder(a.category)
+						const bCategoryOrder = getCategorySortOrder(b.category)
+						if (aCategoryOrder !== bCategoryOrder) {
+							return aCategoryOrder - bCategoryOrder
+						}
+						return a.name.localeCompare(b.name)
+					}
+				)
+
+				// Summary header
+				pdf.setFontSize(12)
+				pdf.setFont('times', 'bold')
+				pdf.text('TOTAL SUMMARY - ALL BRANCHES', pageWidth / 2, yPosition, {
+					align: 'center',
+				})
+				yPosition += 10
+
+				// Draw line under header
+				pdf.setLineWidth(0.5)
+				pdf.line(margin, yPosition - 2, pageWidth - margin, yPosition - 2)
+				yPosition += 5
+
+				// Group products by category for summary
+				const summaryGrouped = sortedProducts.reduce((acc, product) => {
+					const categoryName = getCategoryDisplayName(product.category)
+					if (!acc[categoryName]) {
+						acc[categoryName] = []
+					}
+					acc[categoryName].push(product)
+					return acc
+				}, {} as Record<string, typeof sortedProducts>)
+
+				// Display summary by category
+				Object.entries(summaryGrouped).forEach(([categoryName, products]) => {
+					checkNewPage(15)
+
+					// Category header
+					pdf.setFontSize(9)
+					pdf.setFont('times', 'bold')
+					pdf.text(`${categoryName}:`, margin, yPosition)
+					yPosition += 6
+
+					// Products in three columns
+					const columnWidth = (pageWidth - 2 * margin) / 3
+					const leftColumnX = margin
+					const middleColumnX = margin + columnWidth
+					const rightColumnX = margin + 2 * columnWidth
+					let leftColumnY = yPosition
+					let middleColumnY = yPosition
+					let rightColumnY = yPosition
+
+					pdf.setFontSize(7)
+					pdf.setFont('times', 'normal')
+
+					products.forEach((product, index) => {
+						const productText = `${product.name} - ${product.totalQuantity} ${product.unit}`
+
+						if (index % 3 === 0) {
+							// Left column
+							if (leftColumnY > pageHeight - margin - 10) {
+								pdf.addPage()
+								currentPage++
+								leftColumnY = margin
+								middleColumnY = margin
+								rightColumnY = margin
+								addPageNumber()
+							}
+							pdf.text(productText, leftColumnX, leftColumnY)
+							leftColumnY += 3
+						} else if (index % 3 === 1) {
+							// Middle column
+							if (middleColumnY > pageHeight - margin - 10) {
+								pdf.addPage()
+								currentPage++
+								leftColumnY = margin
+								middleColumnY = margin
+								rightColumnY = margin
+								addPageNumber()
+							}
+							pdf.text(productText, middleColumnX, middleColumnY)
+							middleColumnY += 3
+						} else {
+							// Right column
+							if (rightColumnY > pageHeight - margin - 10) {
+								pdf.addPage()
+								currentPage++
+								leftColumnY = margin
+								middleColumnY = margin
+								rightColumnY = margin
+								addPageNumber()
+							}
+							pdf.text(productText, rightColumnX, rightColumnY)
+							rightColumnY += 3
+						}
+					})
+
+					// Set yPosition to the maximum of all three columns
+					yPosition = Math.max(leftColumnY, middleColumnY, rightColumnY) + 5
+				})
+
+				yPosition += 5
 
 				// Footer
 				checkNewPage(15)
