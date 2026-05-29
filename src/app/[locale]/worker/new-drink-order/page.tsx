@@ -84,11 +84,17 @@ const NewDrinkOrderPage: React.FC = () => {
 	}, [loadDrinkProducts])
 
 	useEffect(() => {
-		const onFocus = () => {
-			loadDrinkProducts()
+		const refresh = () => {
+			if (document.visibilityState === 'visible') {
+				loadDrinkProducts()
+			}
 		}
-		window.addEventListener('focus', onFocus)
-		return () => window.removeEventListener('focus', onFocus)
+		window.addEventListener('focus', refresh)
+		document.addEventListener('visibilitychange', refresh)
+		return () => {
+			window.removeEventListener('focus', refresh)
+			document.removeEventListener('visibilitychange', refresh)
+		}
 	}, [loadDrinkProducts])
 
 	useEffect(() => {
