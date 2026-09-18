@@ -6,6 +6,7 @@ import MarkAllCompletedDialog, {
 } from "@/components/editor/MarkAllCompletedDialog";
 import EditorSkeleton from "@/components/editor/EditorSkeleton";
 import OrderDetailsDialog from "@/components/editor/OrderDetailsDialog";
+import OrderFulfillmentDialog from "@/components/editor/OrderFulfillmentDialog";
 import { OrderStatusFilter } from "@/components/editor/orderStatus";
 import OrderStatusTabs from "@/components/editor/OrderStatusTabs";
 import OrdersFilters from "@/components/editor/OrdersFilters";
@@ -18,6 +19,7 @@ import {
   useBulkUpdateAllOrdersStatus,
   useOrderStatusCounts,
   useOrdersList,
+  useUpdateOrder,
   useUpdateOrderStatus,
 } from "@/hooks/queries";
 import { ordersApi } from "@/lib/api";
@@ -47,6 +49,7 @@ export default function EditorDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showFulfillmentDialog, setShowFulfillmentDialog] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
@@ -81,6 +84,7 @@ export default function EditorDashboard() {
     useOrderStatusCounts(countBaseFilters);
 
   const updateStatusMutation = useUpdateOrderStatus();
+  const updateOrderMutation = useUpdateOrder();
   const markAllCompletedMutation = useBulkUpdateAllOrdersStatus();
 
   const hasDateOrBranchFilter = Boolean(filters.date || filters.branch);
@@ -109,6 +113,26 @@ export default function EditorDashboard() {
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setShowOrderDialog(true);
+  };
+
+  const handleEditFulfillment = (order: Order) => {
+    setSelectedOrder(order);
+    setShowFulfillmentDialog(true);
+  };
+
+  const handleFulfillmentSave = async (
+    items: Array<{ product: string; quantity: number }>,
+  ) => {
+    if (!selectedOrder) return;
+
+    await updateOrderMutation.mutateAsync(
+      { id: selectedOrder._id, items },
+      {
+        onSuccess: () => {
+          setShowFulfillmentDialog(false);
+        },
+      },
+    );
   };
 
   const handleAddNotes = (order: Order) => {
@@ -269,6 +293,7 @@ export default function EditorDashboard() {
               onViewOrder={handleViewOrder}
               onStatusChange={handleInlineStatusChange}
               onUpdateStatus={handleAddNotes}
+              onEditFulfillment={handleEditFulfillment}
               onPrintOrder={handlePrintOrder}
             />
 
@@ -287,6 +312,14 @@ export default function EditorDashboard() {
         order={selectedOrder}
         open={showOrderDialog}
         onOpenChange={setShowOrderDialog}
+      />
+
+      <OrderFulfillmentDialog
+        order={selectedOrder}
+        open={showFulfillmentDialog}
+        onOpenChange={setShowFulfillmentDialog}
+        onSave={handleFulfillmentSave}
+        isSaving={updateOrderMutation.isPending}
       />
 
       <StatusUpdateDialog

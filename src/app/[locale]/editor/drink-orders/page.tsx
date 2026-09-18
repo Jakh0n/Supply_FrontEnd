@@ -9,6 +9,7 @@ import { OrderStatusFilter } from "@/components/editor/orderStatus";
 import OrderStatusTabs from "@/components/editor/OrderStatusTabs";
 import OrdersFilters from "@/components/editor/OrdersFilters";
 import OrdersPagination from "@/components/editor/OrdersPagination";
+import OrderFulfillmentDialog from "@/components/editor/OrderFulfillmentDialog";
 import OrdersTable from "@/components/editor/OrdersTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import {
   useBulkUpdateAllOrdersStatus,
   useDrinkOrderStatusCounts,
   useDrinkOrdersList,
+  useUpdateDrinkOrder,
   useUpdateDrinkOrderStatus,
 } from "@/hooks/queries";
 import { formatDate } from "@/lib/formatDate";
@@ -56,6 +58,7 @@ const EditorDrinkOrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<DrinkOrder | null>(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [showNotesDialog, setShowNotesDialog] = useState(false);
+  const [showFulfillmentDialog, setShowFulfillmentDialog] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [filters, setFilters] = useState<OrderFilters>(DEFAULT_FILTERS);
@@ -91,6 +94,7 @@ const EditorDrinkOrdersPage = () => {
     useDrinkOrderStatusCounts(countBaseFilters);
 
   const updateStatusMutation = useUpdateDrinkOrderStatus();
+  const updateDrinkOrderMutation = useUpdateDrinkOrder();
   const markAllCompletedMutation = useBulkUpdateAllOrdersStatus();
   const hasDateOrBranchFilter = Boolean(filters.date || filters.branch);
 
@@ -118,6 +122,26 @@ const EditorDrinkOrdersPage = () => {
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order as DrinkOrder);
     setShowOrderDialog(true);
+  };
+
+  const handleEditFulfillment = (order: Order) => {
+    setSelectedOrder(order as DrinkOrder);
+    setShowFulfillmentDialog(true);
+  };
+
+  const handleFulfillmentSave = async (
+    items: Array<{ product: string; quantity: number }>,
+  ) => {
+    if (!selectedOrder) return;
+
+    await updateDrinkOrderMutation.mutateAsync(
+      { id: selectedOrder._id, items },
+      {
+        onSuccess: () => {
+          setShowFulfillmentDialog(false);
+        },
+      },
+    );
   };
 
   const handleAddNotes = (order: Order) => {
@@ -209,6 +233,7 @@ const EditorDrinkOrdersPage = () => {
             onViewOrder={handleViewOrder}
             onStatusChange={handleInlineStatusChange}
             onUpdateStatus={handleAddNotes}
+            onEditFulfillment={handleEditFulfillment}
           />
 
           <OrdersPagination
@@ -304,6 +329,14 @@ const EditorDrinkOrdersPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <OrderFulfillmentDialog
+        order={selectedOrder}
+        open={showFulfillmentDialog}
+        onOpenChange={setShowFulfillmentDialog}
+        onSave={handleFulfillmentSave}
+        isSaving={updateDrinkOrderMutation.isPending}
+      />
 
       <Dialog open={showNotesDialog} onOpenChange={setShowNotesDialog}>
         <DialogContent className="w-[95vw] max-w-md mx-auto">

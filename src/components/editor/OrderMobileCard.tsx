@@ -9,8 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Order, OrderStatus } from "@/types";
+import { canFulfillmentEdit } from "@/lib/orderStockStatus";
 import {
   Building2,
+  ClipboardList,
   Edit,
   Eye,
   MoreHorizontal,
@@ -30,6 +32,7 @@ interface OrderMobileCardProps {
   onPrint?: () => void;
   onStatusChange?: (status: OrderStatus) => void;
   onAddNotes?: () => void;
+  onEditFulfillment?: () => void;
 }
 
 function getStatusIconClass(status: string): string {
@@ -56,6 +59,7 @@ export default function OrderMobileCard({
   onPrint,
   onStatusChange,
   onAddNotes,
+  onEditFulfillment,
 }: OrderMobileCardProps) {
   const tc = useTranslations("common");
   const to = useTranslations("editor.orders");
@@ -138,6 +142,12 @@ export default function OrderMobileCard({
                   <DropdownMenuItem onClick={onPrint}>
                     <Printer className="h-4 w-4 mr-2" />
                     {tc("print")}
+                  </DropdownMenuItem>
+                )}
+                {onEditFulfillment && canFulfillmentEdit(order.status) && (
+                  <DropdownMenuItem onClick={onEditFulfillment}>
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    {to("editOrder")}
                   </DropdownMenuItem>
                 )}
                 {onAddNotes && (

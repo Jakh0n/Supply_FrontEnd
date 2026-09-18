@@ -1,147 +1,166 @@
-import { drinkOrdersApi, ordersApi } from '@/lib/api'
-import { getErrorMessage, handleApiError } from '@/lib/errorUtils'
-import { queryKeys } from '@/lib/queryKeys'
-import { OrderFilters, OrderStatus } from '@/types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { drinkOrdersApi, ordersApi } from "@/lib/api";
+import { getErrorMessage, handleApiError } from "@/lib/errorUtils";
+import { queryKeys } from "@/lib/queryKeys";
+import { OrderFilters, OrderStatus } from "@/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export function useOrdersList(
-	filters?: OrderFilters,
-	options?: { enabled?: boolean }
+  filters?: OrderFilters,
+  options?: { enabled?: boolean },
 ) {
-	return useQuery({
-		queryKey: queryKeys.orders.list(filters ?? {}),
-		queryFn: () => ordersApi.getOrders(filters),
-		enabled: options?.enabled ?? true,
-	})
+  return useQuery({
+    queryKey: queryKeys.orders.list(filters ?? {}),
+    queryFn: () => ordersApi.getOrders(filters),
+    enabled: options?.enabled ?? true,
+  });
 }
 
 export function useOrderDetail(orderId: string | null) {
-	return useQuery({
-		queryKey: queryKeys.orders.detail(orderId ?? ''),
-		queryFn: () => ordersApi.getOrder(orderId!),
-		enabled: Boolean(orderId),
-	})
+  return useQuery({
+    queryKey: queryKeys.orders.detail(orderId ?? ""),
+    queryFn: () => ordersApi.getOrder(orderId!),
+    enabled: Boolean(orderId),
+  });
 }
 
 export function useOrderDayContext(
-	requestedDate?: string,
-	options?: { enabled?: boolean }
+  requestedDate?: string,
+  options?: { enabled?: boolean },
 ) {
-	return useQuery({
-		queryKey: queryKeys.orders.dayContext(requestedDate),
-		queryFn: () => ordersApi.getOrderDayContext(requestedDate),
-		enabled: (options?.enabled ?? true) && Boolean(requestedDate),
-	})
+  return useQuery({
+    queryKey: queryKeys.orders.dayContext(requestedDate),
+    queryFn: () => ordersApi.getOrderDayContext(requestedDate),
+    enabled: (options?.enabled ?? true) && Boolean(requestedDate),
+  });
 }
 
 export function useDashboardStats(options?: { enabled?: boolean }) {
-	return useQuery({
-		queryKey: queryKeys.orders.dashboardStats(),
-		queryFn: () => ordersApi.getDashboardStats(),
-		enabled: options?.enabled ?? true,
-	})
+  return useQuery({
+    queryKey: queryKeys.orders.dashboardStats(),
+    queryFn: () => ordersApi.getDashboardStats(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useUpdateOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      items,
+    }: {
+      id: string;
+      items: Array<{ product: string; quantity: number }>;
+    }) => ordersApi.updateOrder(id, { items }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      toast.success("Order updated successfully");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(handleApiError(error)));
+    },
+  });
 }
 
 export function useUpdateOrderStatus() {
-	const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: ({
-			id,
-			status,
-			adminNotes,
-		}: {
-			id: string
-			status: OrderStatus
-			adminNotes?: string
-		}) => ordersApi.updateOrderStatus(id, status, adminNotes),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
-			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
-			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
-			toast.success('Order status updated successfully')
-		},
-		onError: error => {
-			toast.error(getErrorMessage(handleApiError(error)))
-		},
-	})
+  return useMutation({
+    mutationFn: ({
+      id,
+      status,
+      adminNotes,
+    }: {
+      id: string;
+      status: OrderStatus;
+      adminNotes?: string;
+    }) => ordersApi.updateOrderStatus(id, status, adminNotes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      toast.success("Order status updated successfully");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(handleApiError(error)));
+    },
+  });
 }
 
 export function useBulkUpdateOrderStatus() {
-	const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: ({
-			orderIds,
-			status,
-			adminNotes,
-		}: {
-			orderIds: string[]
-			status: OrderStatus
-			adminNotes?: string
-		}) => ordersApi.bulkUpdateOrderStatus(orderIds, status, adminNotes),
-		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
-			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
-			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
-			toast.success(
-				`Successfully updated ${variables.orderIds.length} orders to ${variables.status}`
-			)
-		},
-		onError: error => {
-			toast.error(getErrorMessage(handleApiError(error)))
-		},
-	})
+  return useMutation({
+    mutationFn: ({
+      orderIds,
+      status,
+      adminNotes,
+    }: {
+      orderIds: string[];
+      status: OrderStatus;
+      adminNotes?: string;
+    }) => ordersApi.bulkUpdateOrderStatus(orderIds, status, adminNotes),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      toast.success(
+        `Successfully updated ${variables.orderIds.length} orders to ${variables.status}`,
+      );
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(handleApiError(error)));
+    },
+  });
 }
 
 export function useBulkUpdateAllOrdersStatus() {
-	const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: async (options: {
-			status: OrderStatus
-			scope: 'all' | 'filtered'
-			date?: string
-			branch?: string
-			includeDrinkOrders?: boolean
-		}) => {
-			const ordersResult = await ordersApi.bulkUpdateAllOrderStatus({
-				status: options.status,
-				scope: options.scope,
-				date: options.date,
-				branch: options.branch,
-			})
+  return useMutation({
+    mutationFn: async (options: {
+      status: OrderStatus;
+      scope: "all" | "filtered";
+      date?: string;
+      branch?: string;
+      includeDrinkOrders?: boolean;
+    }) => {
+      const ordersResult = await ordersApi.bulkUpdateAllOrderStatus({
+        status: options.status,
+        scope: options.scope,
+        date: options.date,
+        branch: options.branch,
+      });
 
-			let drinkUpdated = 0
-			if (options.includeDrinkOrders) {
-				const drinkResult = await drinkOrdersApi.bulkUpdateAllDrinkOrderStatus({
-					status: options.status,
-					scope: options.scope,
-					date: options.date,
-					branch: options.branch,
-				})
-				drinkUpdated = drinkResult.updatedCount
-			}
+      let drinkUpdated = 0;
+      if (options.includeDrinkOrders) {
+        const drinkResult = await drinkOrdersApi.bulkUpdateAllDrinkOrderStatus({
+          status: options.status,
+          scope: options.scope,
+          date: options.date,
+          branch: options.branch,
+        });
+        drinkUpdated = drinkResult.updatedCount;
+      }
 
-			return { ordersResult, drinkUpdated }
-		},
-		onSuccess: data => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
-			queryClient.invalidateQueries({ queryKey: queryKeys.drinkOrders.all })
-			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
-			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
-			const ordersCount = data.ordersResult.updatedCount
-			const drinkPart =
-				data.drinkUpdated > 0
-					? ` and ${data.drinkUpdated} drink orders`
-					: ''
-			toast.success(
-				`Updated ${ordersCount} orders${drinkPart} to completed`
-			)
-		},
-		onError: error => {
-			toast.error(getErrorMessage(handleApiError(error)))
-		},
-	})
+      return { ordersResult, drinkUpdated };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.drinkOrders.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      const ordersCount = data.ordersResult.updatedCount;
+      const drinkPart =
+        data.drinkUpdated > 0 ? ` and ${data.drinkUpdated} drink orders` : "";
+      toast.success(`Updated ${ordersCount} orders${drinkPart} to completed`);
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(handleApiError(error)));
+    },
+  });
 }

@@ -105,7 +105,30 @@
 			"adminNotes": "Admin notes",
 			"addAdminNotes": "Add admin notes",
 			"updateStatus": "Update Status",
-			"selectStatus": "Select status"
+			"selectStatus": "Select status",
+			"editOrder": "Edit order"
+		},
+		"fulfillment": {
+			"title": "Review order - {orderNumber}",
+			"branch": "Branch",
+			"worker": "Ordered by",
+			"status": "Status",
+			"product": "Product",
+			"orderedQty": "Ordered qty",
+			"warehouseStock": "Warehouse stock",
+			"stockStatus": "Stock status",
+			"actions": "Actions",
+			"remove": "Remove",
+			"save": "Save changes",
+			"saving": "Saving...",
+			"cancel": "Cancel",
+			"noItems": "No items left in this order",
+			"stockWarning": "Some items are unavailable or below warehouse stock. Remove or reduce quantities before completing.",
+			"issue": {
+				"ok": "Available",
+				"unavailable": "Unavailable",
+				"insufficient": "Low stock"
+			}
 		},
 		"status": {
 			"all": "All",

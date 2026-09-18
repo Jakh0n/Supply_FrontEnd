@@ -1,851 +1,851 @@
 import {
-	AnalyticsTimeframe,
-	AuthUser,
-	BranchAnalyticsResponse,
-	BranchesResponse,
-	CategoriesResponse,
-	DashboardStats,
-	DrinkOrder,
-	DrinkOrderFilters,
-	DrinkOrderFormData,
-	DrinkOrdersResponse,
-	FinancialMetrics,
-	InventoryProductFilters,
-	InventoryProductsResponse,
-	InventorySettings,
-	InventorySummary,
-	LoginCredentials,
-	ManualStockMovementInput,
-	Order,
-	OrderFilters,
-	OrderFormData,
-	OrdersResponse,
-	OrderStatus,
-	OrderDayContextResponse,
-	Product,
-	ProductCategory,
-	ProductFilters,
-	ProductFormData,
-	ProductInsightsResponse,
-	ProductPurchase,
-	ProductPurchaseFilters,
-	ProductPurchaseFormData,
-	ProductPurchasesResponse,
-	ProductsResponse,
-	ProductUnit,
-	PurchaseStats,
-	RegisterData,
-	SubmitOrderReceiptInput,
-	StockMovementFilters,
-	StockMovementsResponse,
-	UnitsResponse,
-	User,
-	UserFilters,
-	UsersResponse,
-	UserStats,
-} from '@/types'
-import axios from 'axios'
-import { handleApiError } from './errorUtils'
-import { getLocalizedPath } from './localePath'
+  AnalyticsTimeframe,
+  AuthUser,
+  BranchAnalyticsResponse,
+  BranchesResponse,
+  CategoriesResponse,
+  DashboardStats,
+  DrinkOrder,
+  DrinkOrderFilters,
+  DrinkOrderFormData,
+  DrinkOrdersResponse,
+  FinancialMetrics,
+  InventoryProductFilters,
+  InventoryProductsResponse,
+  InventorySettings,
+  InventorySummary,
+  LoginCredentials,
+  ManualStockMovementInput,
+  Order,
+  OrderFilters,
+  OrderFormData,
+  OrdersResponse,
+  OrderStatus,
+  OrderDayContextResponse,
+  Product,
+  ProductCategory,
+  ProductFilters,
+  ProductFormData,
+  ProductInsightsResponse,
+  ProductPurchase,
+  ProductPurchaseFilters,
+  ProductPurchaseFormData,
+  ProductPurchasesResponse,
+  ProductsResponse,
+  ProductUnit,
+  PurchaseStats,
+  RegisterData,
+  SubmitOrderReceiptInput,
+  StockMovementFilters,
+  StockMovementsResponse,
+  UnitsResponse,
+  User,
+  UserFilters,
+  UsersResponse,
+  UserStats,
+} from "@/types";
+import axios from "axios";
+import { handleApiError } from "./errorUtils";
+import { getLocalizedPath } from "./localePath";
 
 const API_BASE_URL =
-	process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // Create axios instance
 const api = axios.create({
-	baseURL: API_BASE_URL,
-	headers: {
-		'Content-Type': 'application/json',
-	},
-})
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 // Helper function to create a placeholder product for deleted items
 const createDeletedProductPlaceholder = (): Product => ({
-	_id: 'deleted-product',
-	name: 'Product Deleted',
-	category: 'main-products' as ProductCategory,
-	unit: 'pieces' as ProductUnit,
-	description: 'This product has been deleted',
-	supplier: '',
-	price: 0,
-	amount: 0,
-	minimumStock: 0,
-	inventoryInitialized: false,
-	inventoryInitializedAt: null,
-	inventoryInitializedBy: null,
-	count: 0,
-	images: [],
-	isActive: false,
-	createdBy: { _id: 'system', username: 'System' },
-	createdAt: new Date().toISOString(),
-	updatedAt: new Date().toISOString(),
-})
+  _id: "deleted-product",
+  name: "Product Deleted",
+  category: "main-products" as ProductCategory,
+  unit: "pieces" as ProductUnit,
+  description: "This product has been deleted",
+  supplier: "",
+  price: 0,
+  amount: 0,
+  minimumStock: 0,
+  inventoryInitialized: false,
+  inventoryInitializedAt: null,
+  inventoryInitializedBy: null,
+  count: 0,
+  images: [],
+  isActive: false,
+  createdBy: { _id: "system", username: "System" },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
 
 // Raw API types (with potentially null products)
 interface RawOrderItem {
-	product: Product | null
-	quantity: number
-	notes?: string
+  product: Product | null;
+  quantity: number;
+  notes?: string;
 }
 
 interface RawOrder {
-	_id: string
-	orderNumber: string
-	worker: {
-		_id: string
-		username: string
-		branch: string
-	}
-	branch: string
-	requestedDate: string
-	items: RawOrderItem[]
-	status: OrderStatus
-	notes?: string
-	adminNotes?: string
-	processedBy?: {
-		_id: string
-		username: string
-	}
-	processedAt?: string
-	createdAt: string
-	updatedAt: string
+  _id: string;
+  orderNumber: string;
+  worker: {
+    _id: string;
+    username: string;
+    branch: string;
+  };
+  branch: string;
+  requestedDate: string;
+  items: RawOrderItem[];
+  status: OrderStatus;
+  notes?: string;
+  adminNotes?: string;
+  processedBy?: {
+    _id: string;
+    username: string;
+  };
+  processedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface RawOrdersResponse {
-	orders: RawOrder[]
-	pagination: {
-		current: number
-		pages: number
-		total: number
-	}
+  orders: RawOrder[];
+  pagination: {
+    current: number;
+    pages: number;
+    total: number;
+  };
 }
 
 interface RawDrinkOrdersResponse {
-	drinkOrders: RawOrder[]
-	pagination: {
-		current: number
-		pages: number
-		total: number
-	}
+  drinkOrders: RawOrder[];
+  pagination: {
+    current: number;
+    pages: number;
+    total: number;
+  };
 }
 
 // Helper function to clean order data by replacing null products with placeholders
 const cleanOrderData = (order: RawOrder): Order => {
-	return {
-		...order,
-		items: order.items.map(item => ({
-			...item,
-			product: item.product || createDeletedProductPlaceholder(),
-		})),
-	}
-}
+  return {
+    ...order,
+    items: order.items.map((item) => ({
+      ...item,
+      product: item.product || createDeletedProductPlaceholder(),
+    })),
+  };
+};
 
 // Helper function to clean multiple orders
 const cleanOrdersData = (data: RawOrdersResponse): OrdersResponse => {
-	return {
-		...data,
-		orders: data.orders.map(cleanOrderData),
-	}
-}
+  return {
+    ...data,
+    orders: data.orders.map(cleanOrderData),
+  };
+};
 
 const cleanDrinkOrdersData = (
-	data: RawDrinkOrdersResponse
+  data: RawDrinkOrdersResponse,
 ): DrinkOrdersResponse => {
-	return {
-		...data,
-		drinkOrders: data.drinkOrders.map(order =>
-			cleanOrderData(order)
-		) as DrinkOrder[],
-	}
-}
+  return {
+    ...data,
+    drinkOrders: data.drinkOrders.map((order) =>
+      cleanOrderData(order),
+    ) as DrinkOrder[],
+  };
+};
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-	config => {
-		const token = localStorage.getItem('token')
-		if (token) {
-			config.headers.Authorization = `Bearer ${token}`
-		}
-		return config
-	},
-	error => {
-		return Promise.reject(error)
-	}
-)
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
 
 // Response interceptor to handle auth errors
 api.interceptors.response.use(
-	response => response,
-	error => {
-		if (error.response?.status === 401) {
-			// Only redirect if we're not already on the login page
-			if (
-				typeof window !== 'undefined' &&
-				!window.location.pathname.includes('/login')
-			) {
-				localStorage.removeItem('token')
-				window.location.href = getLocalizedPath('/login')
-			}
-		}
-		return Promise.reject(error)
-	}
-)
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Only redirect if we're not already on the login page
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.includes("/login")
+      ) {
+        localStorage.removeItem("token");
+        window.location.href = getLocalizedPath("/login");
+      }
+    }
+    return Promise.reject(error);
+  },
+);
 
 // Auth API
 export const authApi = {
-	login: async (
-		credentials: LoginCredentials
-	): Promise<{ token: string; user: AuthUser }> => {
-		const response = await api.post('/auth/login', credentials)
-		return response.data
-	},
+  login: async (
+    credentials: LoginCredentials,
+  ): Promise<{ token: string; user: AuthUser }> => {
+    const response = await api.post("/auth/login", credentials);
+    return response.data;
+  },
 
-	getCurrentUser: async (): Promise<{ user: AuthUser }> => {
-		const response = await api.get('/auth/me')
-		return response.data
-	},
+  getCurrentUser: async (): Promise<{ user: AuthUser }> => {
+    const response = await api.get("/auth/me");
+    return response.data;
+  },
 
-	logout: async (): Promise<void> => {
-		await api.post('/auth/logout')
-		localStorage.removeItem('token')
-	},
-}
+  logout: async (): Promise<void> => {
+    await api.post("/auth/logout");
+    localStorage.removeItem("token");
+  },
+};
 
 // Orders API
 export const ordersApi = {
-	getOrders: async (filters?: OrderFilters): Promise<OrdersResponse> => {
-		const params = new URLSearchParams()
-		if (filters?.date) params.append('date', filters.date)
-		if (filters?.month) params.append('month', filters.month.toString())
-		if (filters?.year) params.append('year', filters.year.toString())
-		if (filters?.branch && filters.branch !== 'all')
-			params.append('branch', filters.branch)
-		if (filters?.status && filters.status !== 'all')
-			params.append('status', filters.status)
-		if (filters?.page) params.append('page', filters.page.toString())
-		if (filters?.limit) params.append('limit', filters.limit.toString())
-		if (filters?.viewAll) params.append('viewAll', filters.viewAll)
+  getOrders: async (filters?: OrderFilters): Promise<OrdersResponse> => {
+    const params = new URLSearchParams();
+    if (filters?.date) params.append("date", filters.date);
+    if (filters?.month) params.append("month", filters.month.toString());
+    if (filters?.year) params.append("year", filters.year.toString());
+    if (filters?.branch && filters.branch !== "all")
+      params.append("branch", filters.branch);
+    if (filters?.status && filters.status !== "all")
+      params.append("status", filters.status);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
+    if (filters?.viewAll) params.append("viewAll", filters.viewAll);
 
-		const response = await api.get(`/orders?${params.toString()}`)
-		return cleanOrdersData(response.data)
-	},
+    const response = await api.get(`/orders?${params.toString()}`);
+    return cleanOrdersData(response.data);
+  },
 
-	getOrder: async (id: string): Promise<{ order: Order }> => {
-		const response = await api.get(`/orders/${id}`)
-		return { order: cleanOrderData(response.data.order) }
-	},
+  getOrder: async (id: string): Promise<{ order: Order }> => {
+    const response = await api.get(`/orders/${id}`);
+    return { order: cleanOrderData(response.data.order) };
+  },
 
-	getOrderDayContext: async (
-		requestedDate?: string
-	): Promise<OrderDayContextResponse> => {
-		const search = new URLSearchParams()
-		if (requestedDate) {
-			search.append('requestedDate', requestedDate)
-		}
-		const query = search.toString()
-		const response = await api.get(
-			`/orders/day-context${query ? `?${query}` : ''}`
-		)
-		return response.data
-	},
+  getOrderDayContext: async (
+    requestedDate?: string,
+  ): Promise<OrderDayContextResponse> => {
+    const search = new URLSearchParams();
+    if (requestedDate) {
+      search.append("requestedDate", requestedDate);
+    }
+    const query = search.toString();
+    const response = await api.get(
+      `/orders/day-context${query ? `?${query}` : ""}`,
+    );
+    return response.data;
+  },
 
-	createOrder: async (data: OrderFormData): Promise<{ order: Order }> => {
-		const response = await api.post('/orders', data)
-		return response.data
-	},
+  createOrder: async (data: OrderFormData): Promise<{ order: Order }> => {
+    const response = await api.post("/orders", data);
+    return response.data;
+  },
 
-	updateOrder: async (
-		id: string,
-		data: Partial<OrderFormData>
-	): Promise<{ order: Order }> => {
-		const response = await api.put(`/orders/${id}`, data)
-		return response.data
-	},
+  updateOrder: async (
+    id: string,
+    data: Partial<OrderFormData>,
+  ): Promise<{ order: Order }> => {
+    const response = await api.put(`/orders/${id}`, data);
+    return response.data;
+  },
 
-	updateOrderStatus: async (
-		id: string,
-		status: OrderStatus,
-		adminNotes?: string
-	): Promise<{ order: Order }> => {
-		const response = await api.patch(`/orders/${id}/status`, {
-			status,
-			adminNotes,
-		})
-		return response.data
-	},
+  updateOrderStatus: async (
+    id: string,
+    status: OrderStatus,
+    adminNotes?: string,
+  ): Promise<{ order: Order }> => {
+    const response = await api.patch(`/orders/${id}/status`, {
+      status,
+      adminNotes,
+    });
+    return response.data;
+  },
 
-	bulkUpdateOrderStatus: async (
-		orderIds: string[],
-		status: OrderStatus,
-		adminNotes?: string
-	): Promise<{ message: string; updatedCount: number; orders: Order[] }> => {
-		const response = await api.patch('/orders/bulk/status', {
-			orderIds,
-			status,
-			adminNotes,
-		})
-		return response.data
-	},
+  bulkUpdateOrderStatus: async (
+    orderIds: string[],
+    status: OrderStatus,
+    adminNotes?: string,
+  ): Promise<{ message: string; updatedCount: number; orders: Order[] }> => {
+    const response = await api.patch("/orders/bulk/status", {
+      orderIds,
+      status,
+      adminNotes,
+    });
+    return response.data;
+  },
 
-	bulkUpdateAllOrderStatus: async (options: {
-		status: OrderStatus
-		adminNotes?: string
-		scope?: 'all' | 'filtered'
-		date?: string
-		branch?: string
-	}): Promise<{
-		message: string
-		updatedCount: number
-		matchedCount: number
-	}> => {
-		const response = await api.patch('/orders/bulk/status-all', options)
-		return response.data
-	},
+  bulkUpdateAllOrderStatus: async (options: {
+    status: OrderStatus;
+    adminNotes?: string;
+    scope?: "all" | "filtered";
+    date?: string;
+    branch?: string;
+  }): Promise<{
+    message: string;
+    updatedCount: number;
+    matchedCount: number;
+  }> => {
+    const response = await api.patch("/orders/bulk/status-all", options);
+    return response.data;
+  },
 
-	deleteOrder: async (id: string): Promise<void> => {
-		await api.delete(`/orders/${id}`)
-	},
+  deleteOrder: async (id: string): Promise<void> => {
+    await api.delete(`/orders/${id}`);
+  },
 
-	submitReceipt: async (
-		id: string,
-		data: SubmitOrderReceiptInput
-	): Promise<{ message: string; order: Order }> => {
-		const response = await api.post(`/orders/${id}/receipt`, data)
-		return {
-			message: response.data.message,
-			order: cleanOrderData(response.data.order),
-		}
-	},
+  submitReceipt: async (
+    id: string,
+    data: SubmitOrderReceiptInput,
+  ): Promise<{ message: string; order: Order }> => {
+    const response = await api.post(`/orders/${id}/receipt`, data);
+    return {
+      message: response.data.message,
+      order: cleanOrderData(response.data.order),
+    };
+  },
 
-	downloadPDF: async (date: string, branch?: string): Promise<Blob> => {
-		const params = new URLSearchParams({ date })
-		if (branch && branch !== 'all') params.append('branch', branch)
+  downloadPDF: async (date: string, branch?: string): Promise<Blob> => {
+    const params = new URLSearchParams({ date });
+    if (branch && branch !== "all") params.append("branch", branch);
 
-		const response = await api.get(
-			`/orders/download/pdf?${params.toString()}`,
-			{
-				responseType: 'blob',
-			}
-		)
-		return response.data
-	},
+    const response = await api.get(
+      `/orders/download/pdf?${params.toString()}`,
+      {
+        responseType: "blob",
+      },
+    );
+    return response.data;
+  },
 
-	getDashboardStats: async (): Promise<DashboardStats> => {
-		const response = await api.get('/orders/stats/dashboard')
-		return response.data
-	},
+  getDashboardStats: async (): Promise<DashboardStats> => {
+    const response = await api.get("/orders/stats/dashboard");
+    return response.data;
+  },
 
-	getBranchAnalytics: async (
-		timeframe: AnalyticsTimeframe = 'week',
-		month?: number,
-		year?: number
-	): Promise<BranchAnalyticsResponse> => {
-		const params = new URLSearchParams()
-		params.append('timeframe', timeframe)
+  getBranchAnalytics: async (
+    timeframe: AnalyticsTimeframe = "week",
+    month?: number,
+    year?: number,
+  ): Promise<BranchAnalyticsResponse> => {
+    const params = new URLSearchParams();
+    params.append("timeframe", timeframe);
 
-		if (month && year) {
-			params.append('month', month.toString())
-			params.append('year', year.toString())
-		}
+    if (month && year) {
+      params.append("month", month.toString());
+      params.append("year", year.toString());
+    }
 
-		// Add cache-busting parameter
-		params.append('_t', Date.now().toString())
+    // Add cache-busting parameter
+    params.append("_t", Date.now().toString());
 
-		const response = await api.get(
-			`/orders/analytics/branches?${params.toString()}`
-		)
-		return response.data
-	},
+    const response = await api.get(
+      `/orders/analytics/branches?${params.toString()}`,
+    );
+    return response.data;
+  },
 
-	getProductInsights: async (
-		timeframe: AnalyticsTimeframe = 'week'
-	): Promise<ProductInsightsResponse> => {
-		const response = await api.get(
-			`/orders/analytics/products?timeframe=${timeframe}`
-		)
-		return response.data
-	},
+  getProductInsights: async (
+    timeframe: AnalyticsTimeframe = "week",
+  ): Promise<ProductInsightsResponse> => {
+    const response = await api.get(
+      `/orders/analytics/products?timeframe=${timeframe}`,
+    );
+    return response.data;
+  },
 
-	getFinancialMetrics: async (
-		timeframe: AnalyticsTimeframe = 'week'
-	): Promise<FinancialMetrics> => {
-		const response = await api.get(
-			`/orders/analytics/financial?timeframe=${timeframe}`
-		)
-		return response.data
-	},
-}
+  getFinancialMetrics: async (
+    timeframe: AnalyticsTimeframe = "week",
+  ): Promise<FinancialMetrics> => {
+    const response = await api.get(
+      `/orders/analytics/financial?timeframe=${timeframe}`,
+    );
+    return response.data;
+  },
+};
 
 export const drinkOrdersApi = {
-	getDrinkOrders: async (
-		filters?: DrinkOrderFilters
-	): Promise<DrinkOrdersResponse> => {
-		const params = new URLSearchParams()
-		if (filters?.date) params.append('date', filters.date)
-		if (filters?.branch && filters.branch !== 'all')
-			params.append('branch', filters.branch)
-		if (filters?.status && filters.status !== 'all')
-			params.append('status', filters.status)
-		if (filters?.page) params.append('page', filters.page.toString())
-		if (filters?.limit) params.append('limit', filters.limit.toString())
-		if (filters?.viewAll) params.append('viewAll', filters.viewAll)
+  getDrinkOrders: async (
+    filters?: DrinkOrderFilters,
+  ): Promise<DrinkOrdersResponse> => {
+    const params = new URLSearchParams();
+    if (filters?.date) params.append("date", filters.date);
+    if (filters?.branch && filters.branch !== "all")
+      params.append("branch", filters.branch);
+    if (filters?.status && filters.status !== "all")
+      params.append("status", filters.status);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
+    if (filters?.viewAll) params.append("viewAll", filters.viewAll);
 
-		const response = await api.get(`/drink-orders?${params.toString()}`)
-		return cleanDrinkOrdersData(response.data)
-	},
+    const response = await api.get(`/drink-orders?${params.toString()}`);
+    return cleanDrinkOrdersData(response.data);
+  },
 
-	getDrinkOrder: async (id: string): Promise<{ drinkOrder: DrinkOrder }> => {
-		const response = await api.get(`/drink-orders/${id}`)
-		return {
-			drinkOrder: cleanOrderData(response.data.drinkOrder) as DrinkOrder,
-		}
-	},
+  getDrinkOrder: async (id: string): Promise<{ drinkOrder: DrinkOrder }> => {
+    const response = await api.get(`/drink-orders/${id}`);
+    return {
+      drinkOrder: cleanOrderData(response.data.drinkOrder) as DrinkOrder,
+    };
+  },
 
-	createDrinkOrder: async (
-		data: DrinkOrderFormData
-	): Promise<{ drinkOrder: DrinkOrder }> => {
-		const response = await api.post('/drink-orders', data)
-		return response.data
-	},
+  createDrinkOrder: async (
+    data: DrinkOrderFormData,
+  ): Promise<{ drinkOrder: DrinkOrder }> => {
+    const response = await api.post("/drink-orders", data);
+    return response.data;
+  },
 
-	updateDrinkOrder: async (
-		id: string,
-		data: Partial<DrinkOrderFormData>
-	): Promise<{ drinkOrder: DrinkOrder }> => {
-		const response = await api.put(`/drink-orders/${id}`, data)
-		return response.data
-	},
+  updateDrinkOrder: async (
+    id: string,
+    data: Partial<DrinkOrderFormData>,
+  ): Promise<{ drinkOrder: DrinkOrder }> => {
+    const response = await api.put(`/drink-orders/${id}`, data);
+    return response.data;
+  },
 
-	updateDrinkOrderStatus: async (
-		id: string,
-		status: OrderStatus,
-		adminNotes?: string
-	): Promise<{ drinkOrder: DrinkOrder }> => {
-		const response = await api.patch(`/drink-orders/${id}/status`, {
-			status,
-			adminNotes,
-		})
-		return response.data
-	},
+  updateDrinkOrderStatus: async (
+    id: string,
+    status: OrderStatus,
+    adminNotes?: string,
+  ): Promise<{ drinkOrder: DrinkOrder }> => {
+    const response = await api.patch(`/drink-orders/${id}/status`, {
+      status,
+      adminNotes,
+    });
+    return response.data;
+  },
 
-	deleteDrinkOrder: async (id: string): Promise<void> => {
-		await api.delete(`/drink-orders/${id}`)
-	},
+  deleteDrinkOrder: async (id: string): Promise<void> => {
+    await api.delete(`/drink-orders/${id}`);
+  },
 
-	submitReceipt: async (
-		id: string,
-		data: SubmitOrderReceiptInput
-	): Promise<{ message: string; drinkOrder: DrinkOrder }> => {
-		const response = await api.post(`/drink-orders/${id}/receipt`, data)
-		return {
-			message: response.data.message,
-			drinkOrder: cleanOrderData(response.data.drinkOrder) as DrinkOrder,
-		}
-	},
+  submitReceipt: async (
+    id: string,
+    data: SubmitOrderReceiptInput,
+  ): Promise<{ message: string; drinkOrder: DrinkOrder }> => {
+    const response = await api.post(`/drink-orders/${id}/receipt`, data);
+    return {
+      message: response.data.message,
+      drinkOrder: cleanOrderData(response.data.drinkOrder) as DrinkOrder,
+    };
+  },
 
-	bulkUpdateAllDrinkOrderStatus: async (options: {
-		status: OrderStatus
-		adminNotes?: string
-		scope?: 'all' | 'filtered'
-		date?: string
-		branch?: string
-	}): Promise<{
-		message: string
-		updatedCount: number
-		matchedCount: number
-	}> => {
-		const response = await api.patch('/drink-orders/bulk/status-all', options)
-		return response.data
-	},
-}
+  bulkUpdateAllDrinkOrderStatus: async (options: {
+    status: OrderStatus;
+    adminNotes?: string;
+    scope?: "all" | "filtered";
+    date?: string;
+    branch?: string;
+  }): Promise<{
+    message: string;
+    updatedCount: number;
+    matchedCount: number;
+  }> => {
+    const response = await api.patch("/drink-orders/bulk/status-all", options);
+    return response.data;
+  },
+};
 
 // Users API
 export const usersApi = {
-	getUsers: async (filters?: UserFilters): Promise<UsersResponse> => {
-		const params = new URLSearchParams()
-		if (filters?.position && filters.position !== 'all')
-			params.append('position', filters.position)
-		if (filters?.active && filters.active !== 'all')
-			params.append('active', filters.active)
-		if (filters?.search) params.append('search', filters.search)
+  getUsers: async (filters?: UserFilters): Promise<UsersResponse> => {
+    const params = new URLSearchParams();
+    if (filters?.position && filters.position !== "all")
+      params.append("position", filters.position);
+    if (filters?.active && filters.active !== "all")
+      params.append("active", filters.active);
+    if (filters?.search) params.append("search", filters.search);
 
-		const response = await api.get(`/users?${params.toString()}`)
-		return response.data
-	},
+    const response = await api.get(`/users?${params.toString()}`);
+    return response.data;
+  },
 
-	getUser: async (id: string): Promise<{ user: User }> => {
-		const response = await api.get(`/users/${id}`)
-		return response.data
-	},
+  getUser: async (id: string): Promise<{ user: User }> => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
 
-	createUser: async (data: RegisterData): Promise<{ user: User }> => {
-		const response = await api.post('/users', data)
-		return response.data
-	},
+  createUser: async (data: RegisterData): Promise<{ user: User }> => {
+    const response = await api.post("/users", data);
+    return response.data;
+  },
 
-	updateUser: async (
-		id: string,
-		data: Partial<RegisterData>
-	): Promise<{ user: User }> => {
-		const response = await api.put(`/users/${id}`, data)
-		return response.data
-	},
+  updateUser: async (
+    id: string,
+    data: Partial<RegisterData>,
+  ): Promise<{ user: User }> => {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  },
 
-	toggleUserStatus: async (id: string): Promise<{ user: User }> => {
-		const response = await api.patch(`/users/${id}/toggle-status`)
-		return response.data
-	},
+  toggleUserStatus: async (id: string): Promise<{ user: User }> => {
+    const response = await api.patch(`/users/${id}/toggle-status`);
+    return response.data;
+  },
 
-	deleteUser: async (id: string): Promise<void> => {
-		await api.delete(`/users/${id}`)
-	},
+  deleteUser: async (id: string): Promise<void> => {
+    await api.delete(`/users/${id}`);
+  },
 
-	getUserStats: async (): Promise<UserStats> => {
-		const response = await api.get('/users/stats/overview')
-		return response.data
-	},
+  getUserStats: async (): Promise<UserStats> => {
+    const response = await api.get("/users/stats/overview");
+    return response.data;
+  },
 
-	getBranches: async (): Promise<BranchesResponse> => {
-		const response = await api.get('/users/meta/branches')
-		return response.data
-	},
-}
+  getBranches: async (): Promise<BranchesResponse> => {
+    const response = await api.get("/users/meta/branches");
+    return response.data;
+  },
+};
 
 // Branches API
 export const branchesApi = {
-	getBranches: async (): Promise<{
-		branches: Array<{
-			name: string
-			activeWorkers: number
-			totalOrders: number
-			pendingOrders: number
-		}>
-	}> => {
-		const response = await api.get('/branches')
-		return response.data
-	},
+  getBranches: async (): Promise<{
+    branches: Array<{
+      name: string;
+      activeWorkers: number;
+      totalOrders: number;
+      pendingOrders: number;
+    }>;
+  }> => {
+    const response = await api.get("/branches");
+    return response.data;
+  },
 
-	getBranchNames: async (): Promise<{
-		branches: Array<{
-			name: string
-			activeWorkers: number
-			totalOrders: number
-			pendingOrders: number
-		}>
-	}> => {
-		const response = await api.get('/branches/names')
-		return response.data
-	},
+  getBranchNames: async (): Promise<{
+    branches: Array<{
+      name: string;
+      activeWorkers: number;
+      totalOrders: number;
+      pendingOrders: number;
+    }>;
+  }> => {
+    const response = await api.get("/branches/names");
+    return response.data;
+  },
 
-	getBranch: async (
-		name: string
-	): Promise<{
-		branch: {
-			name: string
-			activeWorkers: number
-			totalWorkers: number
-			totalOrders: number
-			pendingOrders: number
-			completedOrders: number
-			workers: User[]
-		}
-	}> => {
-		const response = await api.get(`/branches/${encodeURIComponent(name)}`)
-		return response.data
-	},
+  getBranch: async (
+    name: string,
+  ): Promise<{
+    branch: {
+      name: string;
+      activeWorkers: number;
+      totalWorkers: number;
+      totalOrders: number;
+      pendingOrders: number;
+      completedOrders: number;
+      workers: User[];
+    };
+  }> => {
+    const response = await api.get(`/branches/${encodeURIComponent(name)}`);
+    return response.data;
+  },
 
-	createBranch: async (data: {
-		name: string
-	}): Promise<{
-		branch: {
-			name: string
-			activeWorkers: number
-			totalOrders: number
-			pendingOrders: number
-		}
-	}> => {
-		const response = await api.post('/branches', data)
-		return response.data
-	},
+  createBranch: async (data: {
+    name: string;
+  }): Promise<{
+    branch: {
+      name: string;
+      activeWorkers: number;
+      totalOrders: number;
+      pendingOrders: number;
+    };
+  }> => {
+    const response = await api.post("/branches", data);
+    return response.data;
+  },
 
-	updateBranch: async (
-		oldName: string,
-		data: { name: string }
-	): Promise<{ branch: { oldName: string; newName: string } }> => {
-		const response = await api.put(
-			`/branches/${encodeURIComponent(oldName)}`,
-			data
-		)
-		return response.data
-	},
+  updateBranch: async (
+    oldName: string,
+    data: { name: string },
+  ): Promise<{ branch: { oldName: string; newName: string } }> => {
+    const response = await api.put(
+      `/branches/${encodeURIComponent(oldName)}`,
+      data,
+    );
+    return response.data;
+  },
 
-	deleteBranch: async (name: string): Promise<void> => {
-		await api.delete(`/branches/${encodeURIComponent(name)}`)
-	},
-}
+  deleteBranch: async (name: string): Promise<void> => {
+    await api.delete(`/branches/${encodeURIComponent(name)}`);
+  },
+};
 
 // Products API
 export const productsApi = {
-	getProducts: async (filters?: ProductFilters): Promise<ProductsResponse> => {
-		const params = new URLSearchParams()
-		if (filters?.category && filters.category !== 'all')
-			params.append('category', filters.category)
-		if (filters?.search) params.append('search', filters.search)
-		if (filters?.active) params.append('active', filters.active)
+  getProducts: async (filters?: ProductFilters): Promise<ProductsResponse> => {
+    const params = new URLSearchParams();
+    if (filters?.category && filters.category !== "all")
+      params.append("category", filters.category);
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.active) params.append("active", filters.active);
 
-		const response = await api.get(`/products?${params.toString()}`)
-		return response.data
-	},
+    const response = await api.get(`/products?${params.toString()}`);
+    return response.data;
+  },
 
-	getProduct: async (id: string): Promise<{ product: Product }> => {
-		const response = await api.get(`/products/${id}`)
-		return response.data
-	},
+  getProduct: async (id: string): Promise<{ product: Product }> => {
+    const response = await api.get(`/products/${id}`);
+    return response.data;
+  },
 
-	uploadImages: async (
-		images: File[]
-	): Promise<{
-		images: Array<{ url: string; publicId: string; isPrimary: boolean }>
-	}> => {
-		const formData = new FormData()
-		images.forEach(image => {
-			formData.append('images', image)
-		})
+  uploadImages: async (
+    images: File[],
+  ): Promise<{
+    images: Array<{ url: string; publicId: string; isPrimary: boolean }>;
+  }> => {
+    const formData = new FormData();
+    images.forEach((image) => {
+      formData.append("images", image);
+    });
 
-		const response = await api.post('/products/upload-images', formData, {
-			headers: {
-				'Content-Type': 'multipart/form-data',
-			},
-		})
-		return response.data
-	},
+    const response = await api.post("/products/upload-images", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
 
-	createProduct: async (
-		data: ProductFormData
-	): Promise<{ product: Product }> => {
-		// Clean up the data before sending - only send fields the backend expects
-		const cleanData = {
-			name: data.name,
-			category: data.category,
-			unit: data.unit,
-			description: data.description?.trim() || undefined,
-			supplier: data.supplier?.trim() || undefined,
-			price:
-				typeof data.price === 'string' ? parseFloat(data.price) : data.price,
-			amount: data.amount || 0,
-			minimumStock: data.minimumStock || 0,
-			count: data.count || 0,
-			purchaseSite: data.purchaseSite?.trim() || undefined,
-			contact: data.contact?.trim() || undefined,
-			monthlyUsage: data.monthlyUsage || 0,
-			images: data.images || [],
-		}
+  createProduct: async (
+    data: ProductFormData,
+  ): Promise<{ product: Product }> => {
+    // Clean up the data before sending - only send fields the backend expects
+    const cleanData = {
+      name: data.name,
+      category: data.category,
+      unit: data.unit,
+      description: data.description?.trim() || undefined,
+      supplier: data.supplier?.trim() || undefined,
+      price:
+        typeof data.price === "string" ? parseFloat(data.price) : data.price,
+      amount: data.amount || 0,
+      minimumStock: data.minimumStock || 0,
+      count: data.count || 0,
+      purchaseSite: data.purchaseSite?.trim() || undefined,
+      contact: data.contact?.trim() || undefined,
+      monthlyUsage: data.monthlyUsage || 0,
+      images: data.images || [],
+    };
 
-		try {
-			const response = await api.post('/products', cleanData)
-			return response.data
-		} catch (error) {
-			throw handleApiError(error)
-		}
-	},
+    try {
+      const response = await api.post("/products", cleanData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 
-	updateProduct: async (
-		id: string,
-		data: Partial<ProductFormData>
-	): Promise<{ product: Product }> => {
-		const response = await api.put(`/products/${id}`, data)
-		return response.data
-	},
+  updateProduct: async (
+    id: string,
+    data: Partial<ProductFormData>,
+  ): Promise<{ product: Product }> => {
+    const response = await api.put(`/products/${id}`, data);
+    return response.data;
+  },
 
-	toggleProductStatus: async (id: string): Promise<{ product: Product }> => {
-		const response = await api.patch(`/products/${id}/toggle-status`)
-		return response.data
-	},
+  toggleProductStatus: async (id: string): Promise<{ product: Product }> => {
+    const response = await api.patch(`/products/${id}/toggle-status`);
+    return response.data;
+  },
 
-	addStock: async (
-		id: string,
-		quantity: number
-	): Promise<{ product: Product; message: string }> => {
-		const response = await api.patch(`/products/${id}/stock`, { quantity })
-		return response.data
-	},
+  addStock: async (
+    id: string,
+    quantity: number,
+  ): Promise<{ product: Product; message: string }> => {
+    const response = await api.patch(`/products/${id}/stock`, { quantity });
+    return response.data;
+  },
 
-	deleteProduct: async (id: string): Promise<void> => {
-		await api.delete(`/products/${id}`)
-	},
+  deleteProduct: async (id: string): Promise<void> => {
+    await api.delete(`/products/${id}`);
+  },
 
-	deleteProductImage: async (
-		productId: string,
-		publicId: string
-	): Promise<{ product: Product }> => {
-		const response = await api.delete(
-			`/products/${productId}/images/${publicId}`
-		)
-		return response.data
-	},
+  deleteProductImage: async (
+    productId: string,
+    publicId: string,
+  ): Promise<{ product: Product }> => {
+    const response = await api.delete(
+      `/products/${productId}/images/${publicId}`,
+    );
+    return response.data;
+  },
 
-	getCategories: async (): Promise<CategoriesResponse> => {
-		const response = await api.get('/products/meta/categories')
-		return response.data
-	},
+  getCategories: async (): Promise<CategoriesResponse> => {
+    const response = await api.get("/products/meta/categories");
+    return response.data;
+  },
 
-	getUnits: async (): Promise<UnitsResponse> => {
-		const response = await api.get('/products/meta/units')
-		return response.data
-	},
-}
+  getUnits: async (): Promise<UnitsResponse> => {
+    const response = await api.get("/products/meta/units");
+    return response.data;
+  },
+};
 
 // Product Purchases API
 export const purchasesApi = {
-	getPurchases: async (
-		filters?: ProductPurchaseFilters
-	): Promise<ProductPurchasesResponse> => {
-		const params = new URLSearchParams()
-		if (filters?.category && filters.category !== 'all')
-			params.append('category', filters.category)
-		if (filters?.branch && filters.branch !== 'all')
-			params.append('branch', filters.branch)
-		if (filters?.status && filters.status !== 'all')
-			params.append('status', filters.status)
-		if (filters?.paymentWay && filters.paymentWay !== 'all')
-			params.append('paymentWay', filters.paymentWay)
-		if (filters?.startDate) params.append('startDate', filters.startDate)
-		if (filters?.endDate) params.append('endDate', filters.endDate)
-		if (filters?.search) params.append('search', filters.search)
-		if (filters?.page) params.append('page', filters.page.toString())
-		if (filters?.limit) params.append('limit', filters.limit.toString())
+  getPurchases: async (
+    filters?: ProductPurchaseFilters,
+  ): Promise<ProductPurchasesResponse> => {
+    const params = new URLSearchParams();
+    if (filters?.category && filters.category !== "all")
+      params.append("category", filters.category);
+    if (filters?.branch && filters.branch !== "all")
+      params.append("branch", filters.branch);
+    if (filters?.status && filters.status !== "all")
+      params.append("status", filters.status);
+    if (filters?.paymentWay && filters.paymentWay !== "all")
+      params.append("paymentWay", filters.paymentWay);
+    if (filters?.startDate) params.append("startDate", filters.startDate);
+    if (filters?.endDate) params.append("endDate", filters.endDate);
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
 
-		const response = await api.get(`/purchases?${params.toString()}`)
-		// Backend returns { data: { purchases: [...], pagination: {...} } }
-		// We need to return { purchases: [...], pagination: {...} }
-		return response.data.data
-	},
+    const response = await api.get(`/purchases?${params.toString()}`);
+    // Backend returns { data: { purchases: [...], pagination: {...} } }
+    // We need to return { purchases: [...], pagination: {...} }
+    return response.data.data;
+  },
 
-	getPurchase: async (id: string): Promise<{ data: ProductPurchase }> => {
-		const response = await api.get(`/purchases/${id}`)
-		return response.data
-	},
+  getPurchase: async (id: string): Promise<{ data: ProductPurchase }> => {
+    const response = await api.get(`/purchases/${id}`);
+    return response.data;
+  },
 
-	createPurchase: async (
-		data: ProductPurchaseFormData
-	): Promise<ProductPurchase> => {
-		try {
-			const response = await api.post('/purchases', data)
-			return response.data.data
-		} catch (error) {
-			if (axios.isAxiosError(error)) {
-				console.error(
-					'API Error creating purchase:',
-					error.response?.data || error.message
-				)
-				console.error('Error status:', error.response?.status)
-			} else {
-				console.error('Unexpected error:', error)
-			}
-			throw error
-		}
-	},
+  createPurchase: async (
+    data: ProductPurchaseFormData,
+  ): Promise<ProductPurchase> => {
+    try {
+      const response = await api.post("/purchases", data);
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          "API Error creating purchase:",
+          error.response?.data || error.message,
+        );
+        console.error("Error status:", error.response?.status);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+      throw error;
+    }
+  },
 
-	updatePurchase: async (
-		id: string,
-		data: Partial<ProductPurchaseFormData>
-	): Promise<ProductPurchase> => {
-		const response = await api.put(`/purchases/${id}`, data)
-		return response.data.data
-	},
+  updatePurchase: async (
+    id: string,
+    data: Partial<ProductPurchaseFormData>,
+  ): Promise<ProductPurchase> => {
+    const response = await api.put(`/purchases/${id}`, data);
+    return response.data.data;
+  },
 
-	deletePurchase: async (id: string): Promise<void> => {
-		await api.delete(`/purchases/${id}`)
-	},
+  deletePurchase: async (id: string): Promise<void> => {
+    await api.delete(`/purchases/${id}`);
+  },
 
-	getPurchaseStats: async (filters?: {
-		startDate?: string
-		endDate?: string
-		branch?: string
-	}): Promise<PurchaseStats> => {
-		const params = new URLSearchParams()
-		if (filters?.startDate) params.append('startDate', filters.startDate)
-		if (filters?.endDate) params.append('endDate', filters.endDate)
-		if (filters?.branch && filters.branch !== 'all')
-			params.append('branch', filters.branch)
+  getPurchaseStats: async (filters?: {
+    startDate?: string;
+    endDate?: string;
+    branch?: string;
+  }): Promise<PurchaseStats> => {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.append("startDate", filters.startDate);
+    if (filters?.endDate) params.append("endDate", filters.endDate);
+    if (filters?.branch && filters.branch !== "all")
+      params.append("branch", filters.branch);
 
-		const response = await api.get(
-			`/purchases/stats/summary?${params.toString()}`
-		)
-		return response.data.data
-	},
+    const response = await api.get(
+      `/purchases/stats/summary?${params.toString()}`,
+    );
+    return response.data.data;
+  },
 
-	uploadImages: async (
-		images: File[]
-	): Promise<{
-		images: Array<{ url: string; publicId: string; isPrimary: boolean }>
-	}> => {
-		const formData = new FormData()
-		images.forEach(image => {
-			formData.append('images', image)
-		})
+  uploadImages: async (
+    images: File[],
+  ): Promise<{
+    images: Array<{ url: string; publicId: string; isPrimary: boolean }>;
+  }> => {
+    const formData = new FormData();
+    images.forEach((image) => {
+      formData.append("images", image);
+    });
 
-		const response = await api.post('/purchases/upload-images', formData, {
-			headers: {
-				'Content-Type': 'multipart/form-data',
-			},
-		})
-		return response.data
-	},
-}
+    const response = await api.post("/purchases/upload-images", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+};
 
 export const inventoryApi = {
-	getSettings: async (): Promise<InventorySettings> => {
-		const response = await api.get('/inventory/settings')
-		return response.data.settings
-	},
+  getSettings: async (): Promise<InventorySettings> => {
+    const response = await api.get("/inventory/settings");
+    return response.data.settings;
+  },
 
-	activate: async (): Promise<InventorySettings> => {
-		const response = await api.post('/inventory/activate')
-		return response.data.settings
-	},
+  activate: async (): Promise<InventorySettings> => {
+    const response = await api.post("/inventory/activate");
+    return response.data.settings;
+  },
 
-	getSummary: async (): Promise<InventorySummary> => {
-		const response = await api.get('/inventory/summary')
-		return response.data.summary
-	},
+  getSummary: async (): Promise<InventorySummary> => {
+    const response = await api.get("/inventory/summary");
+    return response.data.summary;
+  },
 
-	getProducts: async (
-		filters: InventoryProductFilters = {}
-	): Promise<InventoryProductsResponse> => {
-		const params = new URLSearchParams()
-		if (filters.search) params.set('search', filters.search)
-		if (filters.category && filters.category !== 'all')
-			params.set('category', filters.category)
-		if (filters.status && filters.status !== 'all')
-			params.set('status', filters.status)
-		if (filters.page) params.set('page', filters.page.toString())
-		if (filters.limit) params.set('limit', filters.limit.toString())
-		const response = await api.get(`/inventory/products?${params.toString()}`)
-		return response.data
-	},
+  getProducts: async (
+    filters: InventoryProductFilters = {},
+  ): Promise<InventoryProductsResponse> => {
+    const params = new URLSearchParams();
+    if (filters.search) params.set("search", filters.search);
+    if (filters.category && filters.category !== "all")
+      params.set("category", filters.category);
+    if (filters.status && filters.status !== "all")
+      params.set("status", filters.status);
+    if (filters.page) params.set("page", filters.page.toString());
+    if (filters.limit) params.set("limit", filters.limit.toString());
+    const response = await api.get(`/inventory/products?${params.toString()}`);
+    return response.data;
+  },
 
-	getMovements: async (
-		filters: StockMovementFilters = {}
-	): Promise<StockMovementsResponse> => {
-		const params = new URLSearchParams()
-		if (filters.productId) params.set('productId', filters.productId)
-		if (filters.type && filters.type !== 'all')
-			params.set('type', filters.type)
-		if (filters.startDate) params.set('startDate', filters.startDate)
-		if (filters.endDate) params.set('endDate', filters.endDate)
-		if (filters.page) params.set('page', filters.page.toString())
-		if (filters.limit) params.set('limit', filters.limit.toString())
-		const response = await api.get(`/inventory/movements?${params.toString()}`)
-		return response.data
-	},
+  getMovements: async (
+    filters: StockMovementFilters = {},
+  ): Promise<StockMovementsResponse> => {
+    const params = new URLSearchParams();
+    if (filters.productId) params.set("productId", filters.productId);
+    if (filters.type && filters.type !== "all")
+      params.set("type", filters.type);
+    if (filters.startDate) params.set("startDate", filters.startDate);
+    if (filters.endDate) params.set("endDate", filters.endDate);
+    if (filters.page) params.set("page", filters.page.toString());
+    if (filters.limit) params.set("limit", filters.limit.toString());
+    const response = await api.get(`/inventory/movements?${params.toString()}`);
+    return response.data;
+  },
 
-	createMovement: async (
-		input: ManualStockMovementInput
-	): Promise<{ message: string; product: Product }> => {
-		const response = await api.post('/inventory/movements', input)
-		return response.data
-	},
-}
+  createMovement: async (
+    input: ManualStockMovementInput,
+  ): Promise<{ message: string; product: Product }> => {
+    const response = await api.post("/inventory/movements", input);
+    return response.data;
+  },
+};
 
-export default api
+export default api;

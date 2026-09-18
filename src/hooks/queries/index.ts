@@ -8,6 +8,7 @@ export {
 	useCreateDrinkOrder,
 	useDeleteDrinkOrder,
 	useDrinkOrdersList,
+	useUpdateDrinkOrder,
 	useUpdateDrinkOrderStatus,
 } from './useDrinkOrdersQuery'
 export { useDrinkOrderStatusCounts } from './useDrinkOrderStatusCounts'
@@ -18,6 +19,7 @@ export {
 	useOrderDayContext,
 	useOrderDetail,
 	useOrdersList,
+	useUpdateOrder,
 	useUpdateOrderStatus,
 } from './useOrdersQuery'
 export { useOrderStatusCounts } from './useOrderStatusCounts'

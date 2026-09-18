@@ -47,6 +47,29 @@ export function useDeleteDrinkOrder() {
 	})
 }
 
+export function useUpdateDrinkOrder() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({
+			id,
+			items,
+		}: {
+			id: string
+			items: Array<{ product: string; quantity: number }>
+		}) => drinkOrdersApi.updateDrinkOrder(id, { items }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: queryKeys.drinkOrders.all })
+			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
+			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+			toast.success('Drink order updated successfully')
+		},
+		onError: error => {
+			toast.error(getErrorMessage(handleApiError(error)))
+		},
+	})
+}
+
 export function useUpdateDrinkOrderStatus() {
 	const queryClient = useQueryClient()
 

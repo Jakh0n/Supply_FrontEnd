@@ -105,7 +105,30 @@
 			"adminNotes": "Yönetici notları",
 			"addAdminNotes": "Yönetici notu ekle",
 			"updateStatus": "Durumu Güncelle",
-			"selectStatus": "Durum seçin"
+			"selectStatus": "Durum seçin",
+			"editOrder": "Siparişi düzenle"
+		},
+		"fulfillment": {
+			"title": "Siparişi incele - {orderNumber}",
+			"branch": "Şube",
+			"worker": "Sipariş veren",
+			"status": "Durum",
+			"product": "Ürün",
+			"orderedQty": "Sipariş miktarı",
+			"warehouseStock": "Depo stoku",
+			"stockStatus": "Stok durumu",
+			"actions": "İşlemler",
+			"remove": "Kaldır",
+			"save": "Değişiklikleri kaydet",
+			"saving": "Kaydediliyor...",
+			"cancel": "İptal",
+			"noItems": "Bu siparişte ürün kalmadı",
+			"stockWarning": "Bazı ürünler depoda yok veya stok yetersiz. Tamamlamadan önce kaldırın veya miktarı azaltın.",
+			"issue": {
+				"ok": "Mevcut",
+				"unavailable": "Yok",
+				"insufficient": "Stok az"
+			}
 		},
 		"status": {
 			"all": "Tümü",

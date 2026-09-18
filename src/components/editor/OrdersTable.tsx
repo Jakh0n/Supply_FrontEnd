@@ -16,7 +16,9 @@ import {
 } from '@/components/ui/table'
 import { formatDate } from '@/lib/formatDate'
 import { Order, OrderStatus } from '@/types'
-import { Edit, Eye, MoreHorizontal, Printer } from 'lucide-react'
+import { canFulfillmentEdit } from '@/lib/orderStockStatus'
+import { ClipboardList, Edit, Eye, MoreHorizontal, Printer } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import OrderMobileCard from './OrderMobileCard'
 import {
 	getOrderRowClass,
@@ -32,6 +34,8 @@ interface OrdersTableProps {
 	onPrintOrder?: (order: Order) => void
 	/** Opens dialog with admin notes (optional when inline status is enabled) */
 	onUpdateStatus?: (order: Order) => void
+	/** Opens fulfillment editor for pending/approved orders */
+	onEditFulfillment?: (order: Order) => void
 	/** Inline status change without dialog */
 	onStatusChange?: (order: Order, status: OrderStatus) => void
 	inlineStatus?: boolean
@@ -45,11 +49,14 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
 	onViewOrder,
 	onPrintOrder,
 	onUpdateStatus,
+	onEditFulfillment,
 	onStatusChange,
 	inlineStatus = false,
 	compact = false,
 	updatingOrderId = null,
 }) => {
+	const to = useTranslations('editor.orders')
+
 	if (loading) {
 		return (
 			<div className='space-y-3'>
@@ -71,7 +78,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
 		)
 	}
 
-	const showActionsMenu = Boolean(onUpdateStatus)
+	const showActionsMenu = Boolean(onUpdateStatus || onEditFulfillment)
 
 	return (
 		<>
@@ -173,14 +180,25 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
 														</Button>
 													</DropdownMenuTrigger>
 													<DropdownMenuContent>
-														<DropdownMenuItem
-															onClick={() => onUpdateStatus?.(order)}
-														>
-															<Edit className='h-4 w-4 mr-2' />
-															{inlineStatus
-																? 'Add admin notes'
-																: 'Update Status'}
-														</DropdownMenuItem>
+														{onEditFulfillment &&
+															canFulfillmentEdit(order.status) && (
+																<DropdownMenuItem
+																	onClick={() => onEditFulfillment(order)}
+																>
+																	<ClipboardList className='h-4 w-4 mr-2' />
+																	{to('editOrder')}
+																</DropdownMenuItem>
+															)}
+														{onUpdateStatus && (
+															<DropdownMenuItem
+																onClick={() => onUpdateStatus(order)}
+															>
+																<Edit className='h-4 w-4 mr-2' />
+																{inlineStatus
+																	? 'Add admin notes'
+																	: 'Update Status'}
+															</DropdownMenuItem>
+														)}
 														{compact && onPrintOrder && (
 															<DropdownMenuItem
 																onClick={() => onPrintOrder(order)}
@@ -220,6 +238,11 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
 						}
 						onAddNotes={
 							onUpdateStatus ? () => onUpdateStatus(order) : undefined
+						}
+						onEditFulfillment={
+							onEditFulfillment
+								? () => onEditFulfillment(order)
+								: undefined
 						}
 					/>
 				))}
