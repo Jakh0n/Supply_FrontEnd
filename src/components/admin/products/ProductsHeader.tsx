@@ -211,6 +211,25 @@ const ProductsHeader: React.FC<ProductsHeaderProps> = ({
 							/>
 						</div>
 						<div>
+							<Label htmlFor='minimum-stock' className='text-sm font-medium'>
+								Low stock threshold
+							</Label>
+							<Input
+								id='minimum-stock'
+								type='number'
+								min='0'
+								step='any'
+								value={formData.minimumStock ?? 0}
+								onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+									setFormData(prev => ({
+										...prev,
+										minimumStock: Number(e.target.value),
+									}))
+								}
+								className='mt-1 h-10'
+							/>
+						</div>
+						<div>
 							<Label htmlFor='description' className='text-sm font-medium'>
 								Description
 							</Label>

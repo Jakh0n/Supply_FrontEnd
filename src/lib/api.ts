@@ -10,7 +10,12 @@ import {
 	DrinkOrderFormData,
 	DrinkOrdersResponse,
 	FinancialMetrics,
+	InventoryProductFilters,
+	InventoryProductsResponse,
+	InventorySettings,
+	InventorySummary,
 	LoginCredentials,
+	ManualStockMovementInput,
 	Order,
 	OrderFilters,
 	OrderFormData,
@@ -30,6 +35,8 @@ import {
 	ProductUnit,
 	PurchaseStats,
 	RegisterData,
+	StockMovementFilters,
+	StockMovementsResponse,
 	UnitsResponse,
 	User,
 	UserFilters,
@@ -61,6 +68,10 @@ const createDeletedProductPlaceholder = (): Product => ({
 	supplier: '',
 	price: 0,
 	amount: 0,
+	minimumStock: 0,
+	inventoryInitialized: false,
+	inventoryInitializedAt: null,
+	inventoryInitializedBy: null,
 	count: 0,
 	images: [],
 	isActive: false,
@@ -599,6 +610,7 @@ export const productsApi = {
 			price:
 				typeof data.price === 'string' ? parseFloat(data.price) : data.price,
 			amount: data.amount || 0,
+			minimumStock: data.minimumStock || 0,
 			count: data.count || 0,
 			purchaseSite: data.purchaseSite?.trim() || undefined,
 			contact: data.contact?.trim() || undefined,
@@ -755,6 +767,60 @@ export const purchasesApi = {
 				'Content-Type': 'multipart/form-data',
 			},
 		})
+		return response.data
+	},
+}
+
+export const inventoryApi = {
+	getSettings: async (): Promise<InventorySettings> => {
+		const response = await api.get('/inventory/settings')
+		return response.data.settings
+	},
+
+	activate: async (): Promise<InventorySettings> => {
+		const response = await api.post('/inventory/activate')
+		return response.data.settings
+	},
+
+	getSummary: async (): Promise<InventorySummary> => {
+		const response = await api.get('/inventory/summary')
+		return response.data.summary
+	},
+
+	getProducts: async (
+		filters: InventoryProductFilters = {}
+	): Promise<InventoryProductsResponse> => {
+		const params = new URLSearchParams()
+		if (filters.search) params.set('search', filters.search)
+		if (filters.category && filters.category !== 'all')
+			params.set('category', filters.category)
+		if (filters.status && filters.status !== 'all')
+			params.set('status', filters.status)
+		if (filters.page) params.set('page', filters.page.toString())
+		if (filters.limit) params.set('limit', filters.limit.toString())
+		const response = await api.get(`/inventory/products?${params.toString()}`)
+		return response.data
+	},
+
+	getMovements: async (
+		filters: StockMovementFilters = {}
+	): Promise<StockMovementsResponse> => {
+		const params = new URLSearchParams()
+		if (filters.productId) params.set('productId', filters.productId)
+		if (filters.type && filters.type !== 'all')
+			params.set('type', filters.type)
+		if (filters.startDate) params.set('startDate', filters.startDate)
+		if (filters.endDate) params.set('endDate', filters.endDate)
+		if (filters.page) params.set('page', filters.page.toString())
+		if (filters.limit) params.set('limit', filters.limit.toString())
+		const response = await api.get(`/inventory/movements?${params.toString()}`)
+		return response.data
+	},
+
+	createMovement: async (
+		input: ManualStockMovementInput
+	): Promise<{ message: string; product: Product }> => {
+		const response = await api.post('/inventory/movements', input)
 		return response.data
 	},
 }

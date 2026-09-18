@@ -1,4 +1,10 @@
-import { DrinkOrderFilters, OrderFilters, ProductFilters } from '@/types'
+import {
+	DrinkOrderFilters,
+	InventoryProductFilters,
+	OrderFilters,
+	ProductFilters,
+	StockMovementFilters,
+} from '@/types'
 
 export const queryKeys = {
 	orders: {
@@ -26,5 +32,14 @@ export const queryKeys = {
 		lists: () => [...queryKeys.products.all, 'list'] as const,
 		list: (filters: ProductFilters = {}) =>
 			[...queryKeys.products.lists(), filters] as const,
+	},
+	inventory: {
+		all: ['inventory'] as const,
+		summary: () => [...queryKeys.inventory.all, 'summary'] as const,
+		settings: () => [...queryKeys.inventory.all, 'settings'] as const,
+		products: (filters: InventoryProductFilters = {}) =>
+			[...queryKeys.inventory.all, 'products', filters] as const,
+		movements: (filters: StockMovementFilters = {}) =>
+			[...queryKeys.inventory.all, 'movements', filters] as const,
 	},
 }

@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { purchasesApi } from '@/lib/api'
-import { ProductPurchase } from '@/types'
+import { getErrorMessage, handleApiError } from '@/lib/errorUtils'
+import { ProductPurchase, PurchaseStatus } from '@/types'
 import { Package, Search } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
@@ -60,9 +61,18 @@ const PurchaseHistory: React.FC<PurchaseHistoryProps> = ({
 		}
 	}
 
-	const handleEditPurchase = async () => {
-		// TODO: Implement edit functionality
-		toast.info('Edit functionality coming soon')
+	const handleStatusChange = async (
+		purchaseId: string,
+		status: PurchaseStatus
+	) => {
+		try {
+			await purchasesApi.updatePurchase(purchaseId, { status })
+			toast.success(`Purchase marked as ${status}`)
+			await fetchPurchases()
+		} catch (error) {
+			console.error('Error updating purchase status:', error)
+			toast.error(getErrorMessage(handleApiError(error)))
+		}
 	}
 
 	useEffect(() => {
@@ -353,20 +363,31 @@ const PurchaseHistory: React.FC<PurchaseHistoryProps> = ({
 												{new Date(purchase.date).toLocaleDateString()}
 											</td>
 											<td className='p-1 sm:p-2'>
-												<div className='flex items-center space-x-1'>
-													<Button
-														variant='outline'
-														size='sm'
-														onClick={() => handleEditPurchase()}
-														className='h-6 px-2 text-xs'
+												<div className='flex flex-col gap-1 sm:flex-row'>
+													<Select
+														value={purchase.status}
+														onValueChange={status =>
+															handleStatusChange(
+																purchase._id,
+																status as PurchaseStatus
+															)
+														}
 													>
-														Edit
-													</Button>
+														<SelectTrigger className='h-8 min-w-24 px-2 text-xs'>
+															<SelectValue />
+														</SelectTrigger>
+														<SelectContent>
+															<SelectItem value='pending'>Pending</SelectItem>
+															<SelectItem value='ordered'>Ordered</SelectItem>
+															<SelectItem value='received'>Received</SelectItem>
+															<SelectItem value='cancelled'>Cancelled</SelectItem>
+														</SelectContent>
+													</Select>
 													<Button
 														variant='destructive'
 														size='sm'
 														onClick={() => handleDeletePurchase(purchase._id)}
-														className='h-6 px-2 text-xs'
+														className='h-8 px-2 text-xs'
 													>
 														Del
 													</Button>

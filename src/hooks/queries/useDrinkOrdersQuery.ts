@@ -1,4 +1,5 @@
 import { drinkOrdersApi } from '@/lib/api'
+import { getErrorMessage, handleApiError } from '@/lib/errorUtils'
 import { queryKeys } from '@/lib/queryKeys'
 import {
 	DrinkOrderFilters,
@@ -62,10 +63,11 @@ export function useUpdateDrinkOrderStatus() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.drinkOrders.all })
 			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
+			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
 			toast.success('Drink order status updated successfully')
 		},
-		onError: () => {
-			toast.error('Failed to update drink order status')
+		onError: error => {
+			toast.error(getErrorMessage(handleApiError(error)))
 		},
 	})
 }

@@ -1,18 +1,21 @@
 export function getCategoryDisplayName(category: string): string {
   const categoryMap: Record<string, string> = {
+    "store-supplies": "Store Supplies",
+    "food-products": "Food Products",
     "frozen-products": "Frozen Products",
     "main-products": "Main Products",
     desserts: "Desserts",
     drinks: "Drinks",
+    beverages: "Beverages",
     "packaging-materials": "Packaging Materials",
     "cleaning-materials": "Cleaning Materials",
     "desserts-drinks": "Desserts and Drinks",
     food: "Food",
-    beverages: "Beverages",
     cleaning: "Cleaning",
     equipment: "Equipment",
     packaging: "Packaging",
     other: "Other",
+    others: "Other",
   };
   return categoryMap[category] || "Main Products";
 }

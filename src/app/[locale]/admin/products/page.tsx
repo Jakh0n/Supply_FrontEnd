@@ -95,6 +95,7 @@ const ProductsManagement: React.FC = () => {
 		supplier: '',
 		price: 0,
 		amount: 0,
+		minimumStock: 0,
 		count: 0,
 		purchaseSite: '',
 		contact: '',
@@ -245,6 +246,7 @@ const ProductsManagement: React.FC = () => {
 			supplier: product.supplier || '',
 			price: product.price,
 			amount: product.amount || 0,
+			minimumStock: product.minimumStock || 0,
 			count: product.count || 0,
 			purchaseSite: product.purchaseSite || '',
 			contact: product.contact || '',
@@ -263,6 +265,7 @@ const ProductsManagement: React.FC = () => {
 			supplier: '',
 			price: 0,
 			amount: 0,
+			minimumStock: 0,
 			count: 0,
 			purchaseSite: '',
 			contact: '',
@@ -449,6 +452,28 @@ const ProductsManagement: React.FC = () => {
 										}
 										placeholder='₩0 (Korean Won)'
 										required
+										className='mt-1 h-10'
+									/>
+								</div>
+								<div>
+									<Label
+										htmlFor='edit-minimum-stock'
+										className='text-sm font-medium'
+									>
+										Low stock threshold
+									</Label>
+									<Input
+										id='edit-minimum-stock'
+										type='number'
+										min='0'
+										step='any'
+										value={formData.minimumStock ?? 0}
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+											setFormData(prev => ({
+												...prev,
+												minimumStock: Number(e.target.value),
+											}))
+										}
 										className='mt-1 h-10'
 									/>
 								</div>

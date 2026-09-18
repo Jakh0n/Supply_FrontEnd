@@ -3,7 +3,7 @@
 import { Link, usePathname } from "@/i18n/navigation";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
-import { CupSoda, LogOut, Package, ShoppingCart } from "lucide-react";
+import { CupSoda, LogOut, Package, ShoppingCart, Warehouse } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { editorTouchSm } from "./editorUi";
@@ -36,6 +36,12 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({ username, onLogout }) => {
       label: t("nav.products"),
       shortLabel: t("nav.stockShort"),
       icon: Package,
+    },
+    {
+      href: "/editor/inventory" as const,
+      label: t("nav.inventory"),
+      shortLabel: t("nav.inventoryShort"),
+      icon: Warehouse,
     },
   ];
 
@@ -107,7 +113,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({ username, onLogout }) => {
         className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom,0px)]"
         aria-label={t("title")}
       >
-        <div className="grid grid-cols-3 max-w-lg mx-auto">
+        <div className="grid grid-cols-4 max-w-lg mx-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);

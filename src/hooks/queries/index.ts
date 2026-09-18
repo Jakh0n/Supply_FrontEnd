@@ -21,3 +21,11 @@ export {
 	useUpdateOrderStatus,
 } from './useOrdersQuery'
 export { useOrderStatusCounts } from './useOrderStatusCounts'
+export {
+	useActivateInventory,
+	useCreateStockMovement,
+	useInventoryProducts,
+	useInventorySettings,
+	useInventorySummary,
+	useStockMovements,
+} from './useInventoryQuery'

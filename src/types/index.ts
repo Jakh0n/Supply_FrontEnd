@@ -1,483 +1,586 @@
 export interface User {
-	_id?: string
-	id?: string
-	username: string
-	position: 'admin' | 'worker' | 'editor'
-	branch?: string
-	isActive: boolean
-	createdAt: string
+  _id?: string;
+  id?: string;
+  username: string;
+  position: "admin" | "worker" | "editor";
+  branch?: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export interface AuthUser {
-	id: string
-	username: string
-	position: 'admin' | 'worker' | 'editor'
-	branch?: string
+  id: string;
+  username: string;
+  position: "admin" | "worker" | "editor";
+  branch?: string;
 }
 
 export interface LoginCredentials {
-	username: string
-	password: string
+  username: string;
+  password: string;
 }
 
 export interface RegisterData {
-	username: string
-	password: string
-	position: 'admin' | 'worker' | 'editor'
-	branch?: string
+  username: string;
+  password: string;
+  position: "admin" | "worker" | "editor";
+  branch?: string;
 }
 
 export interface ProductImage {
-	url: string
-	publicId: string
-	isPrimary: boolean
+  url: string;
+  publicId: string;
+  isPrimary: boolean;
 }
 
 export interface Product {
-	_id: string
-	name: string
-	category: ProductCategory
-	unit: ProductUnit
-	description?: string
-	supplier?: string
-	price: number
-	amount: number
-	count: number
-	purchaseSite?: string
-	contact?: string
-	monthlyUsage?: number
-	images: ProductImage[]
-	isActive: boolean
-	createdBy: {
-		_id: string
-		username: string
-	}
-	createdAt: string
-	updatedAt: string
+  _id: string;
+  name: string;
+  category: ProductCategory;
+  unit: ProductUnit;
+  description?: string;
+  supplier?: string;
+  price: number;
+  amount: number;
+  minimumStock: number;
+  inventoryInitialized: boolean;
+  inventoryInitializedAt?: string | null;
+  inventoryInitializedBy?: string | null;
+  count: number;
+  purchaseSite?: string;
+  contact?: string;
+  monthlyUsage?: number;
+  images: ProductImage[];
+  isActive: boolean;
+  createdBy: {
+    _id: string;
+    username: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type ProductCategory =
-	| 'frozen-products'
-	| 'main-products'
-	| 'desserts'
-	| 'drinks'
-	| 'packaging-materials'
-	| 'cleaning-materials'
-	| 'vegetables'
+  | "store-supplies"
+  | "food-products"
+  | "frozen-products"
+  | "main-products"
+  | "desserts"
+  | "drinks"
+  | "beverages"
+  | "packaging-materials"
+  | "cleaning-materials"
+  | "vegetables"
+  | "others";
 
 export type ProductUnit =
-	| 'kg'
-	| 'g'
-	| 'l'
-	| 'ml'
-	| 'pieces'
-	| 'boxes'
-	| 'bottles'
-	| 'cans'
-	| 'packets'
+  | "kg"
+  | "g"
+  | "l"
+  | "ml"
+  | "pieces"
+  | "boxes"
+  | "bottles"
+  | "cans"
+  | "packets";
 
 export interface ProductFormData {
-	name: string
-	category: ProductCategory
-	unit: ProductUnit
-	description?: string
-	supplier?: string
-	price: number
-	amount: number
-	count: number
-	purchaseSite?: string
-	contact?: string
-	monthlyUsage?: number
-	images?: ProductImage[]
+  name: string;
+  category: ProductCategory;
+  unit: ProductUnit;
+  description?: string;
+  supplier?: string;
+  price: number;
+  amount: number;
+  minimumStock?: number;
+  count: number;
+  purchaseSite?: string;
+  contact?: string;
+  monthlyUsage?: number;
+  images?: ProductImage[];
 }
 
 export interface OrderItem {
-	product: string | Product
-	quantity: number
-	notes?: string
+  product: string | Product;
+  quantity: number;
+  notes?: string;
 }
 
 export interface Order {
-	_id: string
-	orderNumber: string
-	worker: {
-		_id: string
-		username: string
-		branch: string
-	}
-	branch: string
-	requestedDate: string
-	items: Array<{
-		product: Product
-		quantity: number
-		notes?: string
-	}>
-	status: OrderStatus
-	notes?: string
-	adminNotes?: string
-	processedBy?: {
-		_id: string
-		username: string
-	}
-	processedAt?: string
-	createdAt: string
-	updatedAt: string
+  _id: string;
+  orderNumber: string;
+  worker: {
+    _id: string;
+    username: string;
+    branch: string;
+  };
+  branch: string;
+  requestedDate: string;
+  items: Array<{
+    product: Product;
+    quantity: number;
+    notes?: string;
+  }>;
+  status: OrderStatus;
+  notes?: string;
+  adminNotes?: string;
+  processedBy?: {
+    _id: string;
+    username: string;
+  };
+  processedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export type OrderStatus = 'pending' | 'approved' | 'rejected' | 'completed'
+export type OrderStatus = "pending" | "approved" | "rejected" | "completed";
 
 export interface OrderFormData {
-	requestedDate: string
-	items: OrderItem[]
-	notes?: string
+  requestedDate: string;
+  items: OrderItem[];
+  notes?: string;
 }
 
 export interface DrinkOrder {
-	_id: string
-	orderNumber: string
-	worker: {
-		_id: string
-		username: string
-		branch: string
-	}
-	branch: string
-	requestedDate: string
-	items: Array<{
-		product: Product
-		quantity: number
-		notes?: string
-	}>
-	status: OrderStatus
-	notes?: string
-	adminNotes?: string
-	processedBy?: {
-		_id: string
-		username: string
-	}
-	processedAt?: string
-	createdAt: string
-	updatedAt: string
+  _id: string;
+  orderNumber: string;
+  worker: {
+    _id: string;
+    username: string;
+    branch: string;
+  };
+  branch: string;
+  requestedDate: string;
+  items: Array<{
+    product: Product;
+    quantity: number;
+    notes?: string;
+  }>;
+  status: OrderStatus;
+  notes?: string;
+  adminNotes?: string;
+  processedBy?: {
+    _id: string;
+    username: string;
+  };
+  processedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DrinkOrderFormData {
-	requestedDate: string
-	branch: string
-	items: OrderItem[]
-	notes?: string
+  requestedDate: string;
+  branch: string;
+  items: OrderItem[];
+  notes?: string;
 }
 
 export interface DrinkOrderFilters {
-	date?: string
-	branch?: string
-	status?: OrderStatus | 'all'
-	page?: number
-	limit?: number
-	viewAll?: string
+  date?: string;
+  branch?: string;
+  status?: OrderStatus | "all";
+  page?: number;
+  limit?: number;
+  viewAll?: string;
 }
 
-
 export interface OrderFilters {
-	date?: string
-	month?: number
-	year?: number
-	branch?: string
-	status?: OrderStatus | 'all'
-	page?: number
-	limit?: number
-	viewAll?: string // For workers to view all orders
+  date?: string;
+  month?: number;
+  year?: number;
+  branch?: string;
+  status?: OrderStatus | "all";
+  page?: number;
+  limit?: number;
+  viewAll?: string; // For workers to view all orders
 }
 
 export interface KoreanDayContext {
-	date: string
-	dayOfWeekKo: string
-	dayOfWeekEn: string
-	dayOfWeekIndex: number
-	isWeekend: boolean
-	isSunday: boolean
-	isHoliday: boolean
-	holidayNameKo: string | null
-	holidayNameEn: string | null
-	trafficHint: 'higher' | 'lower' | 'closed' | 'normal'
-	messages: string[]
-	weekdayLabel?: string
-	summary?: string
+  date: string;
+  dayOfWeekKo: string;
+  dayOfWeekEn: string;
+  dayOfWeekIndex: number;
+  isWeekend: boolean;
+  isSunday: boolean;
+  isHoliday: boolean;
+  holidayNameKo: string | null;
+  holidayNameEn: string | null;
+  trafficHint: "higher" | "lower" | "closed" | "normal";
+  messages: string[];
+  weekdayLabel?: string;
+  summary?: string;
 }
 
 export interface OrderDayContextResponse {
-	dayContext: KoreanDayContext
+  dayContext: KoreanDayContext;
 }
 
 export interface ProductFilters {
-	category?: ProductCategory | 'all'
-	search?: string
-	active?: 'true' | 'false' | 'all'
+  category?: ProductCategory | "all";
+  search?: string;
+  active?: "true" | "false" | "all";
 }
 
 export interface UserFilters {
-	position?: 'admin' | 'worker' | 'editor' | 'all'
-	active?: 'true' | 'false' | 'all'
-	search?: string
+  position?: "admin" | "worker" | "editor" | "all";
+  active?: "true" | "false" | "all";
+  search?: string;
 }
 
 export interface ApiResponse<T> {
-	message?: string
-	data?: T
-	errors?: Array<{
-		field: string
-		message: string
-	}>
+  message?: string;
+  data?: T;
+  errors?: Array<{
+    field: string;
+    message: string;
+  }>;
 }
 
 export interface PaginationInfo {
-	current: number
-	pages: number
-	total: number
+  current: number;
+  pages: number;
+  total: number;
 }
 
 export interface OrdersResponse {
-	orders: Order[]
-	pagination: PaginationInfo
+  orders: Order[];
+  pagination: PaginationInfo;
 }
 
 export interface DrinkOrdersResponse {
-	drinkOrders: DrinkOrder[]
-	pagination: PaginationInfo
+  drinkOrders: DrinkOrder[];
+  pagination: PaginationInfo;
 }
 
-
 export interface ProductsResponse {
-	products: Product[]
-	total: number
+  products: Product[];
+  total: number;
 }
 
 export interface UsersResponse {
-	users: User[]
-	total: number
+  users: User[];
+  total: number;
 }
 
 export interface DashboardStats {
-	todayOrders: number
-	todayCompletedOrders: number
-	pendingOrders: number
-	totalUsers?: number
-	totalProducts?: number
-	completedOrders?: number
-	totalRevenue?: number
-	todayRevenue?: number
-	totalItems?: number
-	branchStats: Array<{
-		_id: string
-		totalOrders: number
-		pendingOrders: number
-	}>
+  todayOrders: number;
+  todayCompletedOrders: number;
+  pendingOrders: number;
+  totalUsers?: number;
+  totalProducts?: number;
+  completedOrders?: number;
+  totalRevenue?: number;
+  todayRevenue?: number;
+  totalItems?: number;
+  branchStats: Array<{
+    _id: string;
+    totalOrders: number;
+    pendingOrders: number;
+  }>;
 }
 
 export interface UserStats {
-	totalUsers: number
-	activeUsers: number
-	adminCount: number
-	workerCount: number
-	branchStats: Array<{
-		_id: string
-		count: number
-	}>
+  totalUsers: number;
+  activeUsers: number;
+  adminCount: number;
+  workerCount: number;
+  branchStats: Array<{
+    _id: string;
+    count: number;
+  }>;
 }
 
 export interface BranchesResponse {
-	branches: string[]
+  branches: string[];
 }
 
 export interface Branch {
-	name: string
-	activeWorkers: number
-	totalOrders: number
-	pendingOrders: number
+  name: string;
+  activeWorkers: number;
+  totalOrders: number;
+  pendingOrders: number;
 }
 
 export interface BranchDetails {
-	name: string
-	activeWorkers: number
-	totalWorkers: number
-	totalOrders: number
-	pendingOrders: number
-	completedOrders: number
-	workers: User[]
+  name: string;
+  activeWorkers: number;
+  totalWorkers: number;
+  totalOrders: number;
+  pendingOrders: number;
+  completedOrders: number;
+  workers: User[];
 }
 
 export interface BranchFormData {
-	name: string
+  name: string;
 }
 
 export interface CategoriesResponse {
-	categories: ProductCategory[]
+  categories: ProductCategory[];
 }
 
 export interface UnitsResponse {
-	units: ProductUnit[]
+  units: ProductUnit[];
 }
 
 // Analytics Types
 export interface BranchAnalytics {
-	branch: string
-	totalOrders: number
-	totalValue: number
-	avgOrderValue: number
-	pendingOrders: number
-	completedOrders: number
-	mostOrderedProducts: Array<{
-		name: string
-		quantity: number
-		value: number
-	}>
-	weeklyTrend: number
+  branch: string;
+  totalOrders: number;
+  totalValue: number;
+  avgOrderValue: number;
+  pendingOrders: number;
+  completedOrders: number;
+  mostOrderedProducts: Array<{
+    name: string;
+    quantity: number;
+    value: number;
+  }>;
+  weeklyTrend: number;
 }
 
 export interface ProductInsights {
-	name: string
-	totalOrdered: number
-	totalValue: number
-	frequency: number
-	avgPrice: number
-	trend: 'up' | 'down' | 'stable'
+  name: string;
+  totalOrdered: number;
+  totalValue: number;
+  frequency: number;
+  avgPrice: number;
+  trend: "up" | "down" | "stable";
 }
 
 export interface FinancialMetrics {
-	dailySpending: number
-	weeklySpending: number
-	monthlySpending: number
-	avgOrderValue: number
+  dailySpending: number;
+  weeklySpending: number;
+  monthlySpending: number;
+  avgOrderValue: number;
 
-	// Growth metrics (real historical data)
-	dailyGrowth?: number
-	weeklyGrowth?: number
-	monthlyGrowth?: number
-	avgOrderGrowth?: number
+  // Growth metrics (real historical data)
+  dailyGrowth?: number;
+  weeklyGrowth?: number;
+  monthlyGrowth?: number;
+  avgOrderGrowth?: number;
 
-	// Previous period data for comparison
-	previousPeriod?: {
-		dailySpending: number
-		weeklySpending: number
-		monthlySpending: number
-		avgOrderValue?: number
-	}
+  // Previous period data for comparison
+  previousPeriod?: {
+    dailySpending: number;
+    weeklySpending: number;
+    monthlySpending: number;
+    avgOrderValue?: number;
+  };
 
-	// Additional insights
-	totalOrders?: number
-	totalItems?: number
+  // Additional insights
+  totalOrders?: number;
+  totalItems?: number;
 
-	// Enhanced branch spending data
-	topSpendingBranches: Array<{
-		branch: string
-		spending: number
-		orderCount?: number
-		itemCount?: number
-		avgOrderValue?: number
-	}>
+  // Enhanced branch spending data
+  topSpendingBranches: Array<{
+    branch: string;
+    spending: number;
+    orderCount?: number;
+    itemCount?: number;
+    avgOrderValue?: number;
+  }>;
 
-	// Status breakdown
-	statusBreakdown?: {
-		completed: number
-		pending: number
-	}
+  // Status breakdown
+  statusBreakdown?: {
+    completed: number;
+    pending: number;
+  };
 }
 
 export interface BranchAnalyticsResponse {
-	branches: BranchAnalytics[]
+  branches: BranchAnalytics[];
 }
 
 export interface ProductInsightsResponse {
-	products: ProductInsights[]
+  products: ProductInsights[];
 }
 
-export type AnalyticsTimeframe = 'day' | 'week' | 'month' | 'quarter'
+export type AnalyticsTimeframe = "day" | "week" | "month" | "quarter";
 
 export interface BranchFilter {
-	branch: string
-	timeframe: AnalyticsTimeframe
-	category: string
-	dateRange: {
-		start: string
-		end: string
-	}
+  branch: string;
+  timeframe: AnalyticsTimeframe;
+  category: string;
+  dateRange: {
+    start: string;
+    end: string;
+  };
 }
 
 // Product Purchase Types
 export type PaymentMethod =
-	| 'cash'
-	| 'bank-transfer'
-	| 'credit-card'
-	| 'debit-card'
-	| 'check'
-	| 'installments'
-	| 'other'
+  | "cash"
+  | "bank-transfer"
+  | "credit-card"
+  | "debit-card"
+  | "check"
+  | "installments"
+  | "other";
 
-export type PurchaseStatus = 'pending' | 'ordered' | 'received' | 'cancelled'
+export type PurchaseStatus = "pending" | "ordered" | "received" | "cancelled";
 
 export interface ProductPurchase {
-	_id: string
-	date: string
-	category: ProductCategory
-	productName: string
-	price: number
-	providerName: string
-	paymentWay: PaymentMethod
-	quantity: number
-	unit: ProductUnit
-	totalAmount: number
-	notes?: string
-	branch: string
-	status: PurchaseStatus
-	images: ProductImage[]
-	createdBy: {
-		_id: string
-		username: string
-	}
-	createdAt: string
-	updatedAt: string
+  _id: string;
+  date: string;
+  category: ProductCategory;
+  productName: string;
+  product?: Product | string | null;
+  price: number;
+  providerName: string;
+  paymentWay: PaymentMethod;
+  quantity: number;
+  unit: ProductUnit;
+  totalAmount: number;
+  notes?: string;
+  branch: string;
+  status: PurchaseStatus;
+  images: ProductImage[];
+  createdBy: {
+    _id: string;
+    username: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProductPurchaseFormData {
-	date: string
-	category: ProductCategory
-	productName: string
-	price: number
-	providerName: string
-	paymentWay: PaymentMethod
-	quantity: number
-	unit: ProductUnit
-	notes?: string
-	branch: string
-	images?: ProductImage[]
+  productId: string;
+  date: string;
+  category: ProductCategory;
+  productName: string;
+  price: number;
+  providerName: string;
+  paymentWay: PaymentMethod;
+  quantity: number;
+  unit: ProductUnit;
+  notes?: string;
+  branch: string;
+  images?: ProductImage[];
+  status?: PurchaseStatus;
 }
 
 export interface ProductPurchaseFilters {
-	category?: ProductCategory | 'all'
-	branch?: string | 'all'
-	status?: PurchaseStatus | 'all'
-	paymentWay?: PaymentMethod | 'all'
-	startDate?: string
-	endDate?: string
-	search?: string
-	page?: number
-	limit?: number
+  category?: ProductCategory | "all";
+  branch?: string | "all";
+  status?: PurchaseStatus | "all";
+  paymentWay?: PaymentMethod | "all";
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface ProductPurchasesResponse {
-	purchases: ProductPurchase[]
-	pagination: PaginationInfo
+  purchases: ProductPurchase[];
+  pagination: PaginationInfo;
 }
 
 export interface PurchaseStats {
-	totalPurchases: number
-	totalAmount: number
-	statusBreakdown: Array<{
-		_id: PurchaseStatus
-		count: number
-	}>
-	categoryBreakdown: Array<{
-		_id: ProductCategory
-		count: number
-		totalAmount: number
-	}>
-	recentPurchases: ProductPurchase[]
+  totalPurchases: number;
+  totalAmount: number;
+  statusBreakdown: Array<{
+    _id: PurchaseStatus;
+    count: number;
+  }>;
+  categoryBreakdown: Array<{
+    _id: ProductCategory;
+    count: number;
+    totalAmount: number;
+  }>;
+  recentPurchases: ProductPurchase[];
+}
+
+export type StockMovementType =
+  | "purchase-in"
+  | "order-out"
+  | "drink-order-out"
+  | "reversal-in"
+  | "reversal-out"
+  | "manual-in"
+  | "manual-out"
+  | "adjustment-in"
+  | "adjustment-out";
+
+export type InventoryStatusFilter =
+  | "all"
+  | "available"
+  | "low"
+  | "out"
+  | "uninitialized";
+
+export interface StockMovement {
+  _id: string;
+  product: Pick<Product, "_id" | "name" | "unit" | "category"> | null;
+  productName: string;
+  unit: ProductUnit;
+  type: StockMovementType;
+  quantity: number;
+  delta: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  sourceType: "ProductPurchase" | "Order" | "DrinkOrder" | "Manual";
+  sourceId: string;
+  sourceVersion: number;
+  branch: string;
+  reason: string;
+  createdBy: {
+    _id: string;
+    username: string;
+    position: "admin" | "editor" | "worker";
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventorySummary {
+  totalProducts: number;
+  outOfStockProducts: number;
+  lowStockProducts: number;
+  incomingMovements24h: number;
+  outgoingMovements24h: number;
+}
+
+export interface InventorySettings {
+  status: "setup" | "active";
+  totalProducts: number;
+  initializedProducts: number;
+  remainingProducts: number;
+  activatedAt: string | null;
+}
+
+export interface InventoryProductFilters {
+  search?: string;
+  category?: ProductCategory | "all";
+  status?: InventoryStatusFilter;
+  page?: number;
+  limit?: number;
+}
+
+export interface StockMovementFilters {
+  productId?: string;
+  type?: StockMovementType | "all";
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface InventoryProductsResponse {
+  products: Product[];
+  pagination: PaginationInfo;
+}
+
+export interface StockMovementsResponse {
+  movements: StockMovement[];
+  pagination: PaginationInfo;
+}
+
+export interface ManualStockMovementInput {
+  productId: string;
+  mode: "in" | "out" | "set";
+  quantity?: number;
+  targetBalance?: number;
+  reason: string;
 }

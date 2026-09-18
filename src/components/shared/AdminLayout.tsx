@@ -25,6 +25,7 @@ import {
   ShoppingCart,
   User,
   Users,
+  Warehouse,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -72,6 +73,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       title: "Products",
       href: "/admin/products",
       icon: Package,
+    },
+    {
+      title: "Inventory",
+      href: "/admin/inventory",
+      icon: Warehouse,
     },
     {
       title: "Purchases",

@@ -1,4 +1,5 @@
 import { drinkOrdersApi, ordersApi } from '@/lib/api'
+import { getErrorMessage, handleApiError } from '@/lib/errorUtils'
 import { queryKeys } from '@/lib/queryKeys'
 import { OrderFilters, OrderStatus } from '@/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -58,10 +59,11 @@ export function useUpdateOrderStatus() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
 			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
+			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
 			toast.success('Order status updated successfully')
 		},
-		onError: () => {
-			toast.error('Failed to update order status')
+		onError: error => {
+			toast.error(getErrorMessage(handleApiError(error)))
 		},
 	})
 }
@@ -82,12 +84,13 @@ export function useBulkUpdateOrderStatus() {
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
 			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
+			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
 			toast.success(
 				`Successfully updated ${variables.orderIds.length} orders to ${variables.status}`
 			)
 		},
-		onError: () => {
-			toast.error('Failed to update orders')
+		onError: error => {
+			toast.error(getErrorMessage(handleApiError(error)))
 		},
 	})
 }
@@ -127,6 +130,7 @@ export function useBulkUpdateAllOrdersStatus() {
 			queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
 			queryClient.invalidateQueries({ queryKey: queryKeys.drinkOrders.all })
 			queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
+			queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
 			const ordersCount = data.ordersResult.updatedCount
 			const drinkPart =
 				data.drinkUpdated > 0
@@ -136,8 +140,8 @@ export function useBulkUpdateAllOrdersStatus() {
 				`Updated ${ordersCount} orders${drinkPart} to completed`
 			)
 		},
-		onError: () => {
-			toast.error('Failed to update all orders')
+		onError: error => {
+			toast.error(getErrorMessage(handleApiError(error)))
 		},
 	})
 }
