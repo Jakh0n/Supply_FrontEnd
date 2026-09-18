@@ -35,6 +35,7 @@ import {
 	ProductUnit,
 	PurchaseStats,
 	RegisterData,
+	SubmitOrderReceiptInput,
 	StockMovementFilters,
 	StockMovementsResponse,
 	UnitsResponse,
@@ -305,6 +306,17 @@ export const ordersApi = {
 		await api.delete(`/orders/${id}`)
 	},
 
+	submitReceipt: async (
+		id: string,
+		data: SubmitOrderReceiptInput
+	): Promise<{ message: string; order: Order }> => {
+		const response = await api.post(`/orders/${id}/receipt`, data)
+		return {
+			message: response.data.message,
+			order: cleanOrderData(response.data.order),
+		}
+	},
+
 	downloadPDF: async (date: string, branch?: string): Promise<Blob> => {
 		const params = new URLSearchParams({ date })
 		if (branch && branch !== 'all') params.append('branch', branch)
@@ -418,6 +430,17 @@ export const drinkOrdersApi = {
 
 	deleteDrinkOrder: async (id: string): Promise<void> => {
 		await api.delete(`/drink-orders/${id}`)
+	},
+
+	submitReceipt: async (
+		id: string,
+		data: SubmitOrderReceiptInput
+	): Promise<{ message: string; drinkOrder: DrinkOrder }> => {
+		const response = await api.post(`/drink-orders/${id}/receipt`, data)
+		return {
+			message: response.data.message,
+			drinkOrder: cleanOrderData(response.data.drinkOrder) as DrinkOrder,
+		}
 	},
 
 	bulkUpdateAllDrinkOrderStatus: async (options: {

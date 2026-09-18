@@ -34,6 +34,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import OrderReceiptCheck from '@/components/worker/OrderReceiptCheck'
 import { useAuth } from '@/contexts/AuthContext'
 import { ordersApi } from '@/lib/api'
 import { getPrimaryImage } from '@/lib/imageUtils'
@@ -54,6 +55,7 @@ import {
 	XCircle,
 } from 'lucide-react'
 import { Link, useRouter } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import React, { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -103,6 +105,7 @@ const getStatusDisplay = (status: OrderStatus) => {
 }
 
 const MyOrders: React.FC = () => {
+	const tReceipt = useTranslations('worker.receipt')
 	const { user } = useAuth()
 	const [orders, setOrders] = useState<Order[]>([])
 	const [loading, setLoading] = useState(true)
@@ -500,14 +503,23 @@ const MyOrders: React.FC = () => {
 																		</div>
 																	</td>
 																	<td className='py-3 px-4'>
-																		<span
-																			className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.color}`}
-																		>
-																			{statusDisplay.icon}
-																			<span className='ml-1'>
-																				{statusDisplay.label}
+																		<div className='flex flex-wrap items-center gap-1.5'>
+																			<span
+																				className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.color}`}
+																			>
+																				{statusDisplay.icon}
+																				<span className='ml-1'>
+																					{statusDisplay.label}
+																				</span>
 																			</span>
-																		</span>
+																			{order.status === 'completed' &&
+																				(order.receiptStatus ?? 'pending') ===
+																					'pending' && (
+																					<span className='inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800'>
+																						{tReceipt('needsCheck')}
+																					</span>
+																				)}
+																		</div>
 																	</td>
 																	<td className='py-3 px-4 text-sm text-gray-600'>
 																		{formatDate(order.createdAt)}
@@ -802,6 +814,23 @@ const MyOrders: React.FC = () => {
 											</p>
 										</div>
 									)}
+
+									<OrderReceiptCheck
+										order={selectedOrder}
+										onSubmit={input =>
+											ordersApi.submitReceipt(selectedOrder._id, input)
+										}
+										onSuccess={updatedOrder => {
+											setSelectedOrder(updatedOrder)
+											setOrders(current =>
+												current.map(order =>
+													order._id === updatedOrder._id
+														? updatedOrder
+														: order
+												)
+											)
+										}}
+									/>
 
 									{/* Order Items */}
 									<div className='space-y-3'>

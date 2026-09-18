@@ -100,10 +100,49 @@ export interface ProductFormData {
   images?: ProductImage[];
 }
 
+export type OrderItemReceiptStatus =
+  | "pending"
+  | "received"
+  | "partial"
+  | "missing";
+
+export type OrderReceiptStatus = "pending" | "received" | "partial";
+
+export interface OrderItemReceiptFields {
+  receivedQuantity?: number | null;
+  itemReceiptStatus?: OrderItemReceiptStatus;
+  discrepancyNotes?: string;
+}
+
+export interface OrderReceiptFields {
+  receiptStatus?: OrderReceiptStatus;
+  receiptNotes?: string;
+  hasDiscrepancy?: boolean;
+  checkedBy?: {
+    _id: string;
+    username: string;
+  };
+  checkedAt?: string;
+}
+
+export interface OrderReceiptItemInput {
+  productId: string;
+  receivedQuantity: number;
+  discrepancyNotes?: string;
+}
+
+export interface SubmitOrderReceiptInput {
+  items: OrderReceiptItemInput[];
+  receiptNotes?: string;
+}
+
 export interface OrderItem {
   product: string | Product;
   quantity: number;
   notes?: string;
+  receivedQuantity?: number | null;
+  itemReceiptStatus?: OrderItemReceiptStatus;
+  discrepancyNotes?: string;
 }
 
 export interface Order {
@@ -120,6 +159,9 @@ export interface Order {
     product: Product;
     quantity: number;
     notes?: string;
+    receivedQuantity?: number | null;
+    itemReceiptStatus?: OrderItemReceiptStatus;
+    discrepancyNotes?: string;
   }>;
   status: OrderStatus;
   notes?: string;
@@ -129,6 +171,14 @@ export interface Order {
     username: string;
   };
   processedAt?: string;
+  receiptStatus?: OrderReceiptStatus;
+  receiptNotes?: string;
+  hasDiscrepancy?: boolean;
+  checkedBy?: {
+    _id: string;
+    username: string;
+  };
+  checkedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -155,6 +205,9 @@ export interface DrinkOrder {
     product: Product;
     quantity: number;
     notes?: string;
+    receivedQuantity?: number | null;
+    itemReceiptStatus?: OrderItemReceiptStatus;
+    discrepancyNotes?: string;
   }>;
   status: OrderStatus;
   notes?: string;
@@ -164,6 +217,14 @@ export interface DrinkOrder {
     username: string;
   };
   processedAt?: string;
+  receiptStatus?: OrderReceiptStatus;
+  receiptNotes?: string;
+  hasDiscrepancy?: boolean;
+  checkedBy?: {
+    _id: string;
+    username: string;
+  };
+  checkedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

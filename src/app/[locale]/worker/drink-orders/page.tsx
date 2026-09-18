@@ -17,10 +17,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
+import OrderReceiptCheck from '@/components/worker/OrderReceiptCheck'
 import {
 	useDeleteDrinkOrder,
 	useDrinkOrdersList,
 } from '@/hooks/queries'
+import { drinkOrdersApi } from '@/lib/api'
 import { DrinkOrder, OrderStatus } from '@/types'
 import {
 	AlertCircle,
@@ -33,6 +35,7 @@ import {
 	XCircle,
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import React, { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -79,6 +82,7 @@ const getStatusDisplay = (status: OrderStatus) => {
 }
 
 const DrinkOrdersPage: React.FC = () => {
+	const t = useTranslations('worker.receipt')
 	const [selectedOrder, setSelectedOrder] = useState<DrinkOrder | null>(null)
 	const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
 
@@ -180,6 +184,12 @@ const DrinkOrdersPage: React.FC = () => {
 														{status.icon}
 														<span className='ml-1'>{status.label}</span>
 													</span>
+													{order.status === 'completed' &&
+														(order.receiptStatus ?? 'pending') === 'pending' && (
+															<span className='inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800'>
+																{t('needsCheck')}
+															</span>
+														)}
 													<Button
 														variant='outline'
 														size='sm'
@@ -246,6 +256,23 @@ const DrinkOrdersPage: React.FC = () => {
 										{selectedOrder.notes}
 									</div>
 								)}
+								<OrderReceiptCheck
+									order={selectedOrder}
+									onSubmit={async input => {
+										const response = await drinkOrdersApi.submitReceipt(
+											selectedOrder._id,
+											input
+										)
+										return {
+											message: response.message,
+											order: response.drinkOrder,
+										}
+									}}
+									onSuccess={updatedOrder => {
+										setSelectedOrder(updatedOrder)
+										void refetch()
+									}}
+								/>
 							</div>
 						)}
 					</DialogContent>

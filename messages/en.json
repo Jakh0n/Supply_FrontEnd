@@ -33,6 +33,36 @@
 		"products": {
 			"outOfStock": "Currently out of stock",
 			"outOfStockToast": "This product is currently out of stock"
+		},
+		"receipt": {
+			"checkTitle": "Check received items",
+			"checkDescription": "Confirm what arrived at your branch. Mark anything missing or short.",
+			"checkedTitle": "Receipt check completed",
+			"checkedAllReceived": "Everything in this order was received.",
+			"checkedWithIssues": "This order was checked with missing or partial items.",
+			"checkedBy": "Checked by {name} on {date}",
+			"orderedQuantity": "Ordered: {quantity} {unit}",
+			"receivedQuantity": "Received",
+			"receivedOfOrdered": "{received}/{ordered} {unit}",
+			"markAllReceived": "All received",
+			"markMissing": "Missing",
+			"discrepancyNotes": "What was wrong?",
+			"discrepancyPlaceholder": "Example: not on delivery truck",
+			"receiptNotes": "Notes for manager",
+			"receiptNotesPlaceholder": "Optional notes about this delivery",
+			"shortageWarning": "Some items are missing or short. Add a note for each issue before submitting.",
+			"allReceivedHint": "All items match the order.",
+			"submitReceipt": "Submit check",
+			"submitting": "Submitting...",
+			"submitFailed": "Failed to submit receipt check",
+			"invalidQuantity": "Received quantity must be zero or greater",
+			"quantityTooHigh": "Received quantity for {name} cannot exceed the ordered amount",
+			"notesRequired": "Add a note for {name} when quantity is short or missing",
+			"itemReceived": "Received",
+			"itemPartial": "Partial",
+			"itemMissing": "Missing",
+			"itemPending": "Pending",
+			"needsCheck": "Needs check"
 		}
 	},
 	"editor": {

@@ -11,6 +11,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import OrderReceiptCheck from '@/components/worker/OrderReceiptCheck'
 import { ordersApi } from '@/lib/api'
 import { Order, OrderStatus } from '@/types'
 import {
@@ -290,6 +291,16 @@ const OrderDetailPage: React.FC = () => {
 									</p>
 								</div>
 							)}
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardContent className='pt-6'>
+							<OrderReceiptCheck
+								order={order}
+								onSubmit={input => ordersApi.submitReceipt(order._id, input)}
+								onSuccess={updatedOrder => setOrder(updatedOrder)}
+							/>
 						</CardContent>
 					</Card>
 

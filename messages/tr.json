@@ -33,6 +33,36 @@
 		"products": {
 			"outOfStock": "Şu an stokta yok",
 			"outOfStockToast": "Bu ürün şu an stokta yok"
+		},
+		"receipt": {
+			"checkTitle": "Gelen ürünleri kontrol et",
+			"checkDescription": "Şubenize gelen ürünleri onaylayın. Eksik veya gelmeyenleri işaretleyin.",
+			"checkedTitle": "Teslimat kontrolü tamamlandı",
+			"checkedAllReceived": "Bu siparişteki her şey teslim alındı.",
+			"checkedWithIssues": "Bu sipariş eksik veya kısmi ürünlerle kontrol edildi.",
+			"checkedBy": "{name} tarafından {date} tarihinde kontrol edildi",
+			"orderedQuantity": "Sipariş: {quantity} {unit}",
+			"receivedQuantity": "Gelen",
+			"receivedOfOrdered": "{received}/{ordered} {unit}",
+			"markAllReceived": "Tamamı geldi",
+			"markMissing": "Gelmedi",
+			"discrepancyNotes": "Sorun ne?",
+			"discrepancyPlaceholder": "Örnek: kamyonda yoktu",
+			"receiptNotes": "Yönetici notu",
+			"receiptNotesPlaceholder": "Bu teslimat hakkında isteğe bağlı not",
+			"shortageWarning": "Bazı ürünler eksik veya kısmi. Göndermeden önce her sorun için not ekleyin.",
+			"allReceivedHint": "Tüm ürünler siparişle eşleşiyor.",
+			"submitReceipt": "Kontrolü gönder",
+			"submitting": "Gönderiliyor...",
+			"submitFailed": "Teslimat kontrolü gönderilemedi",
+			"invalidQuantity": "Gelen miktar sıfır veya daha büyük olmalı",
+			"quantityTooHigh": "{name} için gelen miktar sipariş miktarını aşamaz",
+			"notesRequired": "Miktar eksik veya gelmediğinde {name} için not ekleyin",
+			"itemReceived": "Geldi",
+			"itemPartial": "Kısmi",
+			"itemMissing": "Gelmedi",
+			"itemPending": "Bekliyor",
+			"needsCheck": "Kontrol gerekli"
 		}
 	},
 	"editor": {
